@@ -1,0 +1,392 @@
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import * as XLSX from 'xlsx';
+import { ArrowLeft, FileSpreadsheet, Minus, Plus } from 'lucide-react';
+import { inventoryApi } from '@/services/api';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { InventoryGroupView, Depot, Etat, SousFamille } from '@/types';
+
+interface InventoryTableProps {
+  inventory: InventoryGroupView[];
+  depots: Depot[];
+  allSousFamilles: SousFamille[];
+}
+
+type ViewMode = 'Date' | 'Quantité' | 'Lot';
+
+export function InventoryTable({ inventory: initialInventory, depots, allSousFamilles }: InventoryTableProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const filterEtat = location.state?.filterEtat as Etat | undefined;
+
+  const [inventory, setInventory] = useState(initialInventory);
+  const [anneeFilter, setAnneeFilter] = useState<string>('tout');
+  const [sousFamilleFilter, setSousFamilleFilter] = useState<string>('tout');
+  const [viewMode, setViewMode] = useState<ViewMode>('Date');
+
+  // Update local state if prop changes
+  useEffect(() => {
+    setInventory(initialInventory);
+  }, [initialInventory]);
+
+  const sousFamillesNames = useMemo(() => allSousFamilles.map(sf => sf.nom), [allSousFamilles]);
+
+  const displayedDepots = useMemo(() => {
+    if (!filterEtat) return depots;
+    return depots.filter(d => filterEtat.depots.includes(d.deNo));
+  }, [depots, filterEtat]);
+
+  const etatSousFamilleNames = useMemo(() => {
+    if (!filterEtat || filterEtat.familles.length === 0) return null;
+    return allSousFamilles
+      .filter(sf => filterEtat.familles.includes(sf.fCodeFFamille))
+      .map(sf => sf.nom);
+  }, [filterEtat, allSousFamilles]);
+
+  const annees = useMemo(() => {
+    const years = new Set<number>();
+    inventory.forEach(item => {
+      item.depots.forEach(depot => {
+        depot.items.forEach(detail => {
+          if (detail.dateExpiration) {
+            years.add(new Date(detail.dateExpiration).getFullYear());
+          }
+        });
+      });
+    });
+    return Array.from(years).sort();
+  }, [inventory]);
+
+  const filteredInventory = useMemo(() => {
+    return inventory.map(item => {
+      // Filter item's depots to only show displayed ones
+      const filteredItemDepots = item.depots.filter(d =>
+        displayedDepots.some(dd => dd.deNo === d.depotId)
+      );
+
+      // Apply family (Etat) and other filters
+      const updatedDepots = filteredItemDepots.map(d => ({
+        ...d,
+        items: d.items.filter(detail => {
+          const matchesSousFamille = sousFamilleFilter === 'tout' || detail.sousFamille === sousFamilleFilter;
+          const matchesAnnee = anneeFilter === 'tout' ||
+            (detail.dateExpiration && new Date(detail.dateExpiration).getFullYear().toString() === anneeFilter);
+
+          // If filtering by Etat, match names that belong to the families in the Etat
+          const matchesEtatFamily = !etatSousFamilleNames || etatSousFamilleNames.includes(detail.sousFamille);
+
+          return matchesSousFamille && matchesAnnee && matchesEtatFamily;
+        })
+      }));
+
+      return {
+        ...item,
+        depots: updatedDepots,
+        total: updatedDepots.reduce((sum, d) => sum + d.items.reduce((iSum, i) => iSum + i.quantite, 0), 0)
+      };
+    }).filter(item => item.total > 0);
+  }, [inventory, anneeFilter, sousFamilleFilter, displayedDepots, etatSousFamilleNames]);
+
+  const updateLocalQuantity = (id: number, delta: number) => {
+    setInventory(prev => prev.map(group => ({
+      ...group,
+      depots: group.depots.map(depot => ({
+        ...depot,
+        items: depot.items.map(item =>
+          item.id === id ? { ...item, quantite: Math.max(0, item.quantite + delta) } : item
+        )
+      }))
+    })));
+  };
+
+  const getCriticalClass = (months: number): string => {
+    if (months < 0) return 'bg-red-500 text-white';
+    if (months <= 2) return 'bg-red-500 text-white';
+    if (months <= 5) return 'bg-orange-500 text-white';
+    if (months <= 8) return 'bg-yellow-500 text-gray-900';
+    return 'bg-blue-400 text-white';
+  };
+
+
+  const handleExportExcel = () => {
+    const headers = ['Longueur', 'Diamètre', ...displayedDepots.map(d => d.deIntitule), 'Total'];
+    const data = filteredInventory.map(item => {
+      const row: any = {
+        'Longueur': item.longueur,
+        'Diamètre': item.diametre,
+      };
+
+      displayedDepots.forEach(depot => {
+        const depotData = item.depots.find(d => d.depotId === depot.deNo);
+        if (depotData && depotData.items.length > 0) {
+          row[depot.deIntitule] = depotData.items.map(detail => {
+            if (viewMode === 'Quantité') return detail.quantite;
+            if (viewMode === 'Lot') return detail.lot || '-';
+            const dateStr = detail.dateExpiration ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' }) : '-';
+            return `${detail.sousFamille}: ${dateStr} (${detail.quantite})`;
+          }).join(' | ');
+        } else {
+          row[depot.deIntitule] = '-';
+        }
+      });
+
+      row['Total'] = item.total;
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventaire');
+
+    const date = new Date().toISOString().split('T')[0];
+    const fileName = `Inventaire_${filterEtat ? filterEtat.nom + '_' : ''}${date}.xlsx`;
+
+    XLSX.writeFile(workbook, fileName);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-white">
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="text-[#3CBAAE]" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Retour
+            </Button>
+            {filterEtat && (
+              <span className="bg-[#3CBAAE]/10 text-[#3CBAAE] px-3 py-1 rounded-full text-sm font-medium border border-[#3CBAAE]/20">
+                Filtre: {filterEtat.nom}
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Année:</span>
+              <Select value={anneeFilter} onValueChange={setAnneeFilter}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Toutes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tout">Toutes</SelectItem>
+                  {annees.map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Sous Famille:</span>
+              <Select value={sousFamilleFilter} onValueChange={setSousFamilleFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Toutes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tout">Toutes</SelectItem>
+                  {sousFamillesNames.map(sf => (
+                    <SelectItem key={sf} value={sf}>{sf}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Affichage:</span>
+              <Select value={viewMode as string} onValueChange={(v) => setViewMode(v as ViewMode)}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Date">Date</SelectItem>
+                  <SelectItem value="Quantité">Quantité</SelectItem>
+                  <SelectItem value="Lot">Lot</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {viewMode === 'Date' && (
+        <div className="px-4 py-2 bg-gray-50 flex flex-wrap items-center gap-2 bg-white border-b">
+          <span className="text-xs font-medium px-2 py-1 bg-red-500 text-white rounded">
+            Date échéance atteinte
+          </span>
+          <span className="text-xs font-medium px-2 py-1 bg-red-500 text-white rounded">
+            Période critique entre 1 et 2 mois
+          </span>
+          <span className="text-xs font-medium px-2 py-1 bg-orange-500 text-white rounded">
+            Période critique entre 3 et 5 mois
+          </span>
+          <span className="text-xs font-medium px-2 py-1 bg-yellow-500 text-black rounded">
+            Période critique entre 6 et 8 mois
+          </span>
+          <span className="text-xs font-medium px-2 py-1 bg-blue-400 text-white rounded">
+            Période critique 9 mois plus
+          </span>
+        </div>
+      )}
+
+      <div className="px-4 py-2 bg-white">
+        <Button
+          className="bg-[#3CBAAE] hover:bg-[#35a89d]"
+          onClick={handleExportExcel}
+        >
+          <FileSpreadsheet className="h-4 w-4 mr-2" />
+          Excel
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-[#3CBAAE] text-white sticky top-0 z-30 shadow-sm">
+              <th className="px-3 py-2 text-left font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] sticky left-0 z-40 w-24 border-r border-white/30 uppercase tracking-tight">Longueur</th>
+              <th className="px-3 py-2 text-left font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] sticky left-24 z-40 w-28 border-r border-white/10 uppercase tracking-tight">Diamètre</th>
+              {displayedDepots.map(depot => (
+                <th key={depot.deNo} className="px-2 py-2 text-center font-semibold text-[11px] leading-tight break-words min-w-[100px] bg-[#3CBAAE] border-r border-white/10 uppercase tracking-tight">
+                  {depot.deIntitule}
+                </th>
+              ))}
+              <th className="px-3 py-2 text-center font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] uppercase tracking-tight">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredInventory.map((item, idx) => {
+              const isNewLength = idx === 0 || item.longueur !== filteredInventory[idx - 1].longueur;
+              return (
+                <tr
+                  key={`${item.longueur}-${item.diametre}-${idx}`}
+                  className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} border-b border-gray-100 ${isNewLength && idx > 0 ? 'border-t-2 border-t-[#3CBAAE]/30' : ''}`}
+                >
+                  {(idx === 0 || item.longueur !== filteredInventory[idx - 1].longueur) && (
+                    <td
+                      className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] align-middle border-r border-[#3CBAAE]/30 border-b border-[#3CBAAE]/5 sticky left-0 z-20 w-24 text-sm shadow-[1px_0_0_0_rgba(60,186,174,0.1)]"
+                      rowSpan={filteredInventory.slice(idx).findIndex(nextItem => nextItem.longueur !== item.longueur) === -1
+                        ? filteredInventory.length - idx
+                        : filteredInventory.slice(idx).findIndex(nextItem => nextItem.longueur !== item.longueur)
+                      }
+                    >
+                      {item.longueur > 0 ? item.longueur : '-'}
+                    </td>
+                  )}
+                  <td className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] sticky left-24 z-20 w-28 border-r border-[#3CBAAE]/10 text-sm relative">
+                    {(idx > 0 && item.longueur === filteredInventory[idx - 1].longueur) && (
+                      <div className="absolute top-0 left-2 right-2 h-[1px] bg-gray-200/60" />
+                    )}
+                    {item.diametre > 0 ? item.diametre.toFixed(2) : '-'}
+                  </td>
+                  {displayedDepots.map(displayDepot => {
+                    const depotData = item.depots.find(d => d.depotId === displayDepot.deNo);
+
+                    if (viewMode === 'Quantité') {
+                      const totalQty = depotData ? depotData.items.reduce((sum, i) => sum + i.quantite, 0) : 0;
+                      return (
+                        <td key={displayDepot.deNo} className="px-2 py-1.5 border-r border-gray-100 min-w-[100px] text-center">
+                          {totalQty > 0 ? (
+                            <span className="text-sm font-bold text-[#3CBAAE]">
+                              {totalQty}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td key={displayDepot.deNo} className="px-2 py-1.5 border-r border-gray-50 min-w-[100px]">
+                        <div className="space-y-1">
+                          {depotData && depotData.items.length > 0 ? (
+                            depotData.items.map((detail, dIdx) => (
+                              <div key={dIdx}>
+                                {/* Info Box */}
+                                {viewMode === 'Lot' ? (
+                                  <div className="text-center text-gray-900 font-medium">
+                                    {detail.lot || '-'}
+                                  </div>
+                                ) : ( // Default to 'Date' view logic
+                                  <div className={`px-2 py-1 rounded text-center text-[11px] font-bold ${getCriticalClass(detail.criticalPeriodMonths)}`}>
+                                    {detail.sousFamille}: {detail.dateExpiration ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' }) : '-'}
+                                    ({detail.quantite})
+                                  </div>
+                                )}
+
+                                {/* Control Box */}
+                                {viewMode === 'Date' && (
+                                  <div className="flex items-center justify-center gap-2 mt-1 py-1 px-2 bg-white rounded border border-gray-200 shadow-sm h-7">
+                                    <button
+                                      className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-all active:scale-90"
+                                      onClick={async (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (detail.quantite > 0) {
+                                          try {
+                                            updateLocalQuantity(detail.id, -1);
+                                            await inventoryApi.adjustQuantity(detail.id, -1);
+                                            toast.success('Mis à jour');
+                                          } catch (err: any) {
+                                            updateLocalQuantity(detail.id, 1);
+                                            const msg = err.response?.data || err.message || "Erreur";
+                                            toast.error(`Erreur: ${msg}`);
+                                          }
+                                        }
+                                      }}
+                                    >
+                                      <Minus className="h-3.5 w-3.5 stroke-[3px]" />
+                                    </button>
+                                    <span className="text-xs font-bold text-gray-900 w-6 text-center tabular-nums">
+                                      {detail.quantite}
+                                    </span>
+                                    <button
+                                      className="text-green-500 hover:bg-green-50 p-1 rounded-full transition-all active:scale-90"
+                                      onClick={async (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        try {
+                                          updateLocalQuantity(detail.id, 1);
+                                          await inventoryApi.adjustQuantity(detail.id, 1);
+                                          toast.success('Mis à jour');
+                                        } catch (err: any) {
+                                          updateLocalQuantity(detail.id, -1);
+                                          const msg = err.response?.data || err.message || "Erreur";
+                                          toast.error(`Erreur: ${msg}`);
+                                        }
+                                      }}
+                                    >
+                                      <Plus className="h-3.5 w-3.5 stroke-[3px]" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="flex justify-center">
+                              <span className="text-gray-300">-</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+                  <td className="px-3 py-1.5 text-center font-bold text-[#3CBAAE] bg-[#f0fdfc] border-l border-[#3CBAAE]/10 text-sm">
+                    {item.total}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

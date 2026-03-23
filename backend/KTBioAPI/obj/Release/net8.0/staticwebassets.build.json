@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "xuSL8CjTy1ZMyYYwbTneGZHpZ66Y00sscj6Eq1b5C6w=",
+  "Source": "KTBioAPI",
+  "BasePath": "_content/KTBioAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
