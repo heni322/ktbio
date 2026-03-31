@@ -79,8 +79,22 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   token: string;
+  refreshToken: string;
   message: string;
   user: Utilisateur | null;
+}
+
+export interface RefreshResponse {
+  token: string;
+  refreshToken: string;
+}
+
+export interface AddUtilisateurRequest {
+  username: string;
+  fullName: string;
+  email: string;
+  password: string;
+  role: string;
 }
 
 export interface DashboardStats {

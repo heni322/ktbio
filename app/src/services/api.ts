@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 import type {
   Depot, Famille, SousFamille, Utilisateur, Etat,
-  InventoryItem, InventoryGroupView, LoginRequest, LoginResponse
+  InventoryItem, InventoryGroupView, LoginRequest, LoginResponse,
+  RefreshResponse, AddUtilisateurRequest
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:51430/api';
@@ -13,6 +15,7 @@ const api = axios.create({
   },
 });
 
+// ─── Request interceptor: attach JWT ────────────────────────────────────────
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -20,6 +23,95 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+/**
+ * Parse a .NET ProblemDetails / ValidationProblemDetails error response and
+ * return a human-readable string (or array of strings).
+ *
+ * Handles:
+ *  - { errors: { field: ["msg", ...], ... } }  → ASP.NET ModelState errors
+ *  - { message: "..." }                         → custom API error
+ *  - { title: "..." }                           → generic ProblemDetails
+ */
+export function parseApiError(error: unknown): string {
+  if (!axios.isAxiosError(error)) return 'Une erreur inattendue est survenue';
+
+  const data = error.response?.data;
+  if (!data) return error.message || 'Erreur réseau';
+
+  // ASP.NET ValidationProblemDetails: { errors: { field: ["msg"] } }
+  if (data.errors && typeof data.errors === 'object') {
+    const messages = Object.values(data.errors as Record<string, string[]>)
+      .flat()
+      .filter(Boolean);
+    if (messages.length) return messages.join('\n');
+  }
+
+  // Custom API error message
+  if (typeof data.message === 'string' && data.message) return data.message;
+
+  // Generic ProblemDetails title
+  if (typeof data.title === 'string' && data.title) return data.title;
+
+  return `Erreur ${error.response?.status ?? ''}`;
+}
+
+// ─── Response interceptor: global toast on API errors + auto-refresh ────────
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Auto-refresh on 401 (only once, skip login/refresh endpoints)
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/Account/Login') &&
+      !originalRequest.url?.includes('/Account/Refresh')
+    ) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        try {
+          const res = await api.post<RefreshResponse>('/Account/Refresh', { refreshToken });
+          const { token, refreshToken: newRefresh } = res.data;
+          localStorage.setItem('token', token);
+          localStorage.setItem('refreshToken', newRefresh);
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+          return api(originalRequest);
+        } catch {
+          // Refresh failed — clear auth and redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+      } else {
+        // No refresh token stored — redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+    }
+
+    // Skip 401 that already went through refresh — no toast
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return Promise.reject(error);
+    }
+
+    const message = parseApiError(error);
+
+    // Show each line as its own toast so multi-field errors are readable
+    message.split('\n').forEach((line) => {
+      if (line.trim()) toast.error(line.trim());
+    });
+
+    return Promise.reject(error);
+  }
+);
 
 export const depotApi = {
   getAll: () => api.get<Depot[]>('/Depot'),
@@ -46,10 +138,13 @@ export const sousFamilleApi = {
 };
 
 export const accountApi = {
-  login: (credentials: LoginRequest) => api.post<LoginResponse>('/Account/Login', credentials),
-  getUsers: () => api.get<Utilisateur[]>('/Account/ListeUtilisateurs'),
-  getUser: (id: number) => api.get<Utilisateur>(`/Account/user/${id}`),
-  register: (user: Utilisateur) => api.post<Utilisateur>('/Account/Register', user),
+  login:             (credentials: LoginRequest)        => api.post<LoginResponse>('/Account/Login', credentials),
+  refresh:           (refreshToken: string)             => api.post<RefreshResponse>('/Account/Refresh', { refreshToken }),
+  getUsers:          ()                                 => api.get<Utilisateur[]>('/Account/ListeUtilisateurs'),
+  getUser:           (id: number)                       => api.get<Utilisateur>(`/Account/user/${id}`),
+  register:          (req: AddUtilisateurRequest)        => api.post('/Account/Register', req),
+  addUtilisateur:    (req: AddUtilisateurRequest)        => api.post('/Account/AddUtilisateur', req),
+  deleteUtilisateur: (id: number)                       => api.delete(`/Account/DeleteUtilisateur/${id}`),
 };
 
 export const etatApi = {

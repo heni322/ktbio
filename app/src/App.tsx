@@ -7,6 +7,7 @@ import { EtatsTable } from './sections/EtatsTable';
 import { FamillesTable } from './sections/FamillesTable';
 import { SousFamillesTable } from './sections/SousFamillesTable';
 import { InventoryTable } from './sections/InventoryTable';
+import { ArticleStockTable } from './sections/ArticleStockTable';
 import { LoginForm } from './sections/LoginForm';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { inventoryApi, depotApi, familleApi, sousFamilleApi, accountApi, etatApi } from './services/api';
@@ -258,8 +259,8 @@ function FamillesPage() {
       await familleApi.create(famille as Famille);
       toast.success('Famille ajoutée');
       fetchData();
-    } catch (error) {
-      toast.error("Erreur lors de l'ajout");
+    } catch {
+      // Error already toasted by the global API interceptor
     }
   };
 
@@ -268,8 +269,8 @@ function FamillesPage() {
       await familleApi.update(famille.faCodeFamille, famille as Famille);
       toast.success('Famille mise à jour');
       fetchData();
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
+    } catch {
+      // Error already toasted by the global API interceptor
     }
   };
 
@@ -278,8 +279,8 @@ function FamillesPage() {
       await familleApi.delete(code);
       toast.success('Famille supprimée');
       fetchData();
-    } catch (error) {
-      toast.error('Erreur lors de la suppression');
+    } catch {
+      // Error already toasted by the global API interceptor
     }
   };
 
@@ -334,8 +335,8 @@ function SousFamillesPage() {
       await sousFamilleApi.create(sf as SousFamille);
       toast.success('Sous-famille ajoutée');
       fetchData();
-    } catch (error) {
-      toast.error("Erreur lors de l'ajout");
+    } catch {
+      // Error already toasted by the global API interceptor
     }
   };
 
@@ -344,8 +345,8 @@ function SousFamillesPage() {
       await sousFamilleApi.update(id, sf as SousFamille);
       toast.success('Sous-famille mise à jour');
       fetchData();
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
+    } catch {
+      // Error already toasted by the global API interceptor
     }
   };
 
@@ -354,8 +355,8 @@ function SousFamillesPage() {
       await sousFamilleApi.delete(id);
       toast.success('Sous-famille supprimée');
       fetchData();
-    } catch (error) {
-      toast.error('Erreur lors de la suppression');
+    } catch {
+      // Error already toasted by the global API interceptor
     }
   };
 
@@ -436,6 +437,15 @@ function InventoryPage() {
   );
 }
 
+// ── NEW: Article Stock Page ───────────────────────────────────────────────────
+function ArticleStockPage() {
+  return (
+    <Layout fullWidth>
+      <ArticleStockTable />
+    </Layout>
+  );
+}
+
 function DepotsPage() {
   const [depots, setDepots] = useState<Depot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -482,22 +492,63 @@ function DepotsPage() {
 }
 
 function UtilisateursPage() {
+  const { user: currentUser } = useAuth();
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]           = useState(true);
+  const [showForm, setShowForm]         = useState(false);
+  const [formLoading, setFormLoading]   = useState(false);
+  const [formData, setFormData]         = useState({
+    username: '', fullName: '', email: '', password: '', role: 'User'
+  });
+  const [formError, setFormError]       = useState('');
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await accountApi.getUsers();
-        setUtilisateurs(res.data);
-      } catch (error) {
-        toast.error('Erreur lors du chargement des utilisateurs');
-      } finally {
-        setLoading(false);
-      }
+  const isAdmin = currentUser?.role === 'Admin';
+
+  const fetchData = async () => {
+    try {
+      const res = await accountApi.getUsers();
+      setUtilisateurs(res.data);
+    } catch {
+      toast.error('Erreur lors du chargement des utilisateurs');
+    } finally {
+      setLoading(false);
     }
-    fetchData();
-  }, []);
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    if (!formData.username || !formData.fullName || !formData.email || !formData.password) {
+      setFormError('Tous les champs sont obligatoires.');
+      return;
+    }
+    setFormLoading(true);
+    try {
+      await accountApi.addUtilisateur(formData);
+      toast.success('Utilisateur créé avec succès');
+      setShowForm(false);
+      setFormData({ username: '', fullName: '', email: '', password: '', role: 'User' });
+      fetchData();
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Erreur lors de la création';
+      setFormError(msg);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Supprimer cet utilisateur ?')) return;
+    try {
+      await accountApi.deleteUtilisateur(id);
+      toast.success('Utilisateur supprimé');
+      fetchData();
+    } catch {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
 
   if (loading) {
     return (
@@ -511,34 +562,131 @@ function UtilisateursPage() {
 
   return (
     <Layout>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Liste des Utilisateurs</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#3CBAAE] text-white">
-              <tr>
-                <th className="px-4 py-3 text-left">Nom</th>
-                <th className="px-4 py-3 text-left">Nom d'utilisateur</th>
-                <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Rôle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {utilisateurs.map((user, idx) => (
-                <tr key={user.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-4 py-3">{user.fullName}</td>
-                  <td className="px-4 py-3">{user.username}</td>
-                  <td className="px-4 py-3">{user.email}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
-                      {user.role}
-                    </span>
-                  </td>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-800">Gestion des Utilisateurs</h2>
+          {isAdmin && (
+            <Button
+              className="bg-[#3CBAAE] hover:bg-[#35a89d] text-white"
+              onClick={() => { setShowForm(!showForm); setFormError(''); }}
+            >
+              {showForm ? 'Annuler' : '+ Ajouter un utilisateur'}
+            </Button>
+          )}
+        </div>
+
+        {/* Add form */}
+        {showForm && isAdmin && (
+          <div className="bg-white rounded-xl shadow border border-gray-100 p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700">Nouvel utilisateur</h3>
+            {formError && (
+              <div className="mb-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm">{formError}</div>
+            )}
+            <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur *</label>
+                <input
+                  type="text" required
+                  value={formData.username}
+                  onChange={e => setFormData(p => ({ ...p, username: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
+                <input
+                  type="text" required
+                  value={formData.fullName}
+                  onChange={e => setFormData(p => ({ ...p, fullName: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <input
+                  type="email" required
+                  value={formData.email}
+                  onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
+                <input
+                  type="password" required minLength={6}
+                  value={formData.password}
+                  onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                <select
+                  value={formData.role}
+                  onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
+                >
+                  <option value="User">Utilisateur</option>
+                  <option value="Admin">Administrateur</option>
+                </select>
+              </div>
+              <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Annuler</Button>
+                <Button type="submit" className="bg-[#3CBAAE] hover:bg-[#35a89d] text-white" disabled={formLoading}>
+                  {formLoading ? 'Création...' : 'Créer l\'utilisateur'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Table */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#3CBAAE] text-white">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm">Nom complet</th>
+                  <th className="px-4 py-3 text-left text-sm">Identifiant</th>
+                  <th className="px-4 py-3 text-left text-sm">Email</th>
+                  <th className="px-4 py-3 text-left text-sm">Rôle</th>
+                  {isAdmin && <th className="px-4 py-3 text-left text-sm">Actions</th>}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {utilisateurs.map((u, idx) => (
+                  <tr key={u.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-3 text-sm">{u.fullName}</td>
+                    <td className="px-4 py-3 text-sm font-mono text-gray-600">@{u.username}</td>
+                    <td className="px-4 py-3 text-sm">{u.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        u.role === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {u.role === 'Admin' ? 'Administrateur' : 'Utilisateur'}
+                      </span>
+                    </td>
+                    {isAdmin && (
+                      <td className="px-4 py-3">
+                        {u.id !== currentUser?.id && (
+                          <button
+                            onClick={() => handleDelete(u.id)}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium border border-red-200 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                          >
+                            Supprimer
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {utilisateurs.length === 0 && (
+              <p className="text-center text-gray-400 py-8">Aucun utilisateur trouvé.</p>
+            )}
+          </div>
         </div>
       </div>
     </Layout>
@@ -764,6 +912,9 @@ function AppRoutes() {
       } />
       <Route path="/inventory" element={
         <ProtectedRoute><InventoryPage /></ProtectedRoute>
+      } />
+      <Route path="/article-stock" element={
+        <ProtectedRoute><ArticleStockPage /></ProtectedRoute>
       } />
       <Route path="/sous-familles" element={
         <ProtectedRoute><SousFamillesPage /></ProtectedRoute>

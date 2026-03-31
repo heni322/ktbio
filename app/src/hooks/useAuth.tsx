@@ -35,6 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(user);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('token', token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
       }
 
       return response.data;
@@ -52,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
   };
 
   const value: AuthContextType = {

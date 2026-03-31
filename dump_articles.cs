@@ -3,7 +3,7 @@ using System;
 
 class Program {
     static void Main() {
-        string connectionString = "Server=.\\SQLEXPRESS;Database=KTBIO2014;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;";
+        string connectionString = "Server=MEGATRON\\SQLEXPRESS;Database=KTBIO2014;User Id=sa;Password=Sql@2025++;TrustServerCertificate=True;Encrypt=False;";
         try {
             using (SqlConnection connection = new SqlConnection(connectionString)) {
                 connection.Open();
