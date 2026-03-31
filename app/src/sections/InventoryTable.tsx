@@ -32,25 +32,20 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
   const [sousFamilleFilter, setSousFamilleFilter] = useState<string>('tout');
   const [viewMode, setViewMode] = useState<ViewMode>('Date');
 
-  // Update local state if prop changes
+  // Sync local state when parent prop changes (e.g. after a re-fetch)
   useEffect(() => {
     setInventory(initialInventory);
   }, [initialInventory]);
 
   const sousFamillesNames = useMemo(() => allSousFamilles.map(sf => sf.nom), [allSousFamilles]);
 
+  // Only show depots that belong to the active Etat filter
   const displayedDepots = useMemo(() => {
-    if (!filterEtat) return depots;
+    if (!filterEtat || filterEtat.depots.length === 0) return depots;
     return depots.filter(d => filterEtat.depots.includes(d.deNo));
   }, [depots, filterEtat]);
 
-  const etatSousFamilleNames = useMemo(() => {
-    if (!filterEtat || filterEtat.familles.length === 0) return null;
-    return allSousFamilles
-      .filter(sf => filterEtat.familles.includes(sf.fCodeFFamille))
-      .map(sf => sf.nom);
-  }, [filterEtat, allSousFamilles]);
-
+  // Collect years present in the (already-backend-filtered) inventory
   const annees = useMemo(() => {
     const years = new Set<number>();
     inventory.forEach(item => {
@@ -65,79 +60,89 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
     return Array.from(years).sort();
   }, [inventory]);
 
+  // NOTE: Famille filtering is already applied server-side by the /Inventory/filter endpoint.
+  // The client only applies the optional année and sous-famille UI filters on top.
   const filteredInventory = useMemo(() => {
-    return inventory.map(item => {
-      // Filter item's depots to only show displayed ones
-      const filteredItemDepots = item.depots.filter(d =>
-        displayedDepots.some(dd => dd.deNo === d.depotId)
-      );
+    return inventory
+      .map(item => {
+        // Limit visible depot columns to those in `displayedDepots`
+        const filteredItemDepots = item.depots.filter(d =>
+          displayedDepots.some(dd => dd.deNo === d.depotId)
+        );
 
-      // Apply family (Etat) and other filters
-      const updatedDepots = filteredItemDepots.map(d => ({
-        ...d,
-        items: d.items.filter(detail => {
-          const matchesSousFamille = sousFamilleFilter === 'tout' || detail.sousFamille === sousFamilleFilter;
-          const matchesAnnee = anneeFilter === 'tout' ||
-            (detail.dateExpiration && new Date(detail.dateExpiration).getFullYear().toString() === anneeFilter);
+        const updatedDepots = filteredItemDepots.map(d => ({
+          ...d,
+          items: d.items.filter(detail => {
+            const matchesSousFamille =
+              sousFamilleFilter === 'tout' || detail.sousFamille === sousFamilleFilter;
+            const matchesAnnee =
+              anneeFilter === 'tout' ||
+              (detail.dateExpiration &&
+                new Date(detail.dateExpiration).getFullYear().toString() === anneeFilter);
+            return matchesSousFamille && matchesAnnee;
+          }),
+        }));
 
-          // If filtering by Etat, match names that belong to the families in the Etat
-          const matchesEtatFamily = !etatSousFamilleNames || etatSousFamilleNames.includes(detail.sousFamille);
-
-          return matchesSousFamille && matchesAnnee && matchesEtatFamily;
-        })
-      }));
-
-      return {
-        ...item,
-        depots: updatedDepots,
-        total: updatedDepots.reduce((sum, d) => sum + d.items.reduce((iSum, i) => iSum + i.quantite, 0), 0)
-      };
-    }).filter(item => item.total > 0);
-  }, [inventory, anneeFilter, sousFamilleFilter, displayedDepots, etatSousFamilleNames]);
+        const total = updatedDepots.reduce(
+          (sum, d) => sum + d.items.reduce((iSum, i) => iSum + i.quantite, 0),
+          0
+        );
+        return { ...item, depots: updatedDepots, total };
+      })
+      .filter(item => item.total > 0);
+  }, [inventory, anneeFilter, sousFamilleFilter, displayedDepots]);
 
   const updateLocalQuantity = (id: number, delta: number) => {
-    setInventory(prev => prev.map(group => ({
-      ...group,
-      depots: group.depots.map(depot => ({
-        ...depot,
-        items: depot.items.map(item =>
-          item.id === id ? { ...item, quantite: Math.max(0, item.quantite + delta) } : item
-        )
+    setInventory(prev =>
+      prev.map(group => ({
+        ...group,
+        depots: group.depots.map(depot => ({
+          ...depot,
+          items: depot.items.map(item =>
+            item.id === id
+              ? { ...item, quantite: Math.max(0, item.quantite + delta) }
+              : item
+          ),
+        })),
       }))
-    })));
+    );
   };
 
   const getCriticalClass = (months: number): string => {
-    if (months < 0) return 'bg-red-500 text-white';
+    if (months <= 0) return 'bg-red-500 text-white';
     if (months <= 2) return 'bg-red-500 text-white';
     if (months <= 5) return 'bg-orange-500 text-white';
     if (months <= 8) return 'bg-yellow-500 text-gray-900';
     return 'bg-blue-400 text-white';
   };
 
-
   const handleExportExcel = () => {
     const headers = ['Longueur', 'Diamètre', ...displayedDepots.map(d => d.deIntitule), 'Total'];
     const data = filteredInventory.map(item => {
-      const row: any = {
-        'Longueur': item.longueur,
-        'Diamètre': item.diametre,
+      const row: Record<string, unknown> = {
+        Longueur: item.longueur,
+        Diamètre: item.diametre,
       };
-
       displayedDepots.forEach(depot => {
         const depotData = item.depots.find(d => d.depotId === depot.deNo);
         if (depotData && depotData.items.length > 0) {
-          row[depot.deIntitule] = depotData.items.map(detail => {
-            if (viewMode === 'Quantité') return detail.quantite;
-            if (viewMode === 'Lot') return detail.lot || '-';
-            const dateStr = detail.dateExpiration ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' }) : '-';
-            return `${detail.sousFamille}: ${dateStr} (${detail.quantite})`;
-          }).join(' | ');
+          row[depot.deIntitule] = depotData.items
+            .map(detail => {
+              if (viewMode === 'Quantité') return detail.quantite;
+              if (viewMode === 'Lot') return detail.lot || '-';
+              const dateStr = detail.dateExpiration
+                ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                  })
+                : '-';
+              return `${detail.sousFamille}: ${dateStr} (${detail.quantite})`;
+            })
+            .join(' | ');
         } else {
           row[depot.deIntitule] = '-';
         }
       });
-
       row['Total'] = item.total;
       return row;
     });
@@ -145,15 +150,14 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
     const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventaire');
-
     const date = new Date().toISOString().split('T')[0];
     const fileName = `Inventaire_${filterEtat ? filterEtat.nom + '_' : ''}${date}.xlsx`;
-
     XLSX.writeFile(workbook, fileName);
   };
 
   return (
     <div className="h-full flex flex-col bg-white">
+      {/* ── Top bar ── */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -201,7 +205,7 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
 
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Affichage:</span>
-              <Select value={viewMode as string} onValueChange={(v) => setViewMode(v as ViewMode)}>
+              <Select value={viewMode} onValueChange={v => setViewMode(v as ViewMode)}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -216,8 +220,9 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
         </div>
       </div>
 
+      {/* ── Legend ── */}
       {viewMode === 'Date' && (
-        <div className="px-4 py-2 bg-gray-50 flex flex-wrap items-center gap-2 bg-white border-b">
+        <div className="px-4 py-2 bg-white border-b flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium px-2 py-1 bg-red-500 text-white rounded">
             Date échéance atteinte
           </span>
@@ -236,156 +241,207 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
         </div>
       )}
 
+      {/* ── Excel button ── */}
       <div className="px-4 py-2 bg-white">
-        <Button
-          className="bg-[#3CBAAE] hover:bg-[#35a89d]"
-          onClick={handleExportExcel}
-        >
+        <Button className="bg-[#3CBAAE] hover:bg-[#35a89d]" onClick={handleExportExcel}>
           <FileSpreadsheet className="h-4 w-4 mr-2" />
           Excel
         </Button>
       </div>
 
+      {/* ── Table ── */}
       <div className="flex-1 overflow-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-[#3CBAAE] text-white sticky top-0 z-30 shadow-sm">
-              <th className="px-3 py-2 text-left font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] sticky left-0 z-40 w-24 border-r border-white/30 uppercase tracking-tight">Longueur</th>
-              <th className="px-3 py-2 text-left font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] sticky left-24 z-40 w-28 border-r border-white/10 uppercase tracking-tight">Diamètre</th>
-              {displayedDepots.map(depot => (
-                <th key={depot.deNo} className="px-2 py-2 text-center font-semibold text-[11px] leading-tight break-words min-w-[100px] bg-[#3CBAAE] border-r border-white/10 uppercase tracking-tight">
-                  {depot.deIntitule}
+        {filteredInventory.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2 py-24">
+            <svg className="h-12 w-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M9 17v-2a4 4 0 014-4h0a4 4 0 014 4v2M3 21h18M12 3a4 4 0 100 8 4 4 0 000-8z" />
+            </svg>
+            <p className="text-sm font-medium">Aucun article trouvé pour ces filtres.</p>
+            {filterEtat && (
+              <p className="text-xs text-gray-400">Filtre actif : <strong>{filterEtat.nom}</strong></p>
+            )}
+          </div>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#3CBAAE] text-white sticky top-0 z-30 shadow-sm">
+                <th className="px-3 py-2 text-left font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] sticky left-0 z-40 w-24 border-r border-white/30 uppercase tracking-tight">
+                  Longueur
                 </th>
-              ))}
-              <th className="px-3 py-2 text-center font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] uppercase tracking-tight">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredInventory.map((item, idx) => {
-              const isNewLength = idx === 0 || item.longueur !== filteredInventory[idx - 1].longueur;
-              return (
-                <tr
-                  key={`${item.longueur}-${item.diametre}-${idx}`}
-                  className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} border-b border-gray-100 ${isNewLength && idx > 0 ? 'border-t-2 border-t-[#3CBAAE]/30' : ''}`}
-                >
-                  {(idx === 0 || item.longueur !== filteredInventory[idx - 1].longueur) && (
-                    <td
-                      className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] align-middle border-r border-[#3CBAAE]/30 border-b border-[#3CBAAE]/5 sticky left-0 z-20 w-24 text-sm shadow-[1px_0_0_0_rgba(60,186,174,0.1)]"
-                      rowSpan={filteredInventory.slice(idx).findIndex(nextItem => nextItem.longueur !== item.longueur) === -1
-                        ? filteredInventory.length - idx
-                        : filteredInventory.slice(idx).findIndex(nextItem => nextItem.longueur !== item.longueur)
-                      }
-                    >
-                      {item.longueur > 0 ? item.longueur : '-'}
-                    </td>
-                  )}
-                  <td className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] sticky left-24 z-20 w-28 border-r border-[#3CBAAE]/10 text-sm relative">
-                    {(idx > 0 && item.longueur === filteredInventory[idx - 1].longueur) && (
-                      <div className="absolute top-0 left-2 right-2 h-[1px] bg-gray-200/60" />
+                <th className="px-3 py-2 text-left font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] sticky left-24 z-40 w-28 border-r border-white/10 uppercase tracking-tight">
+                  Diamètre
+                </th>
+                {displayedDepots.map(depot => (
+                  <th
+                    key={depot.deNo}
+                    className="px-2 py-2 text-center font-semibold text-[11px] leading-tight break-words min-w-[100px] bg-[#3CBAAE] border-r border-white/10 uppercase tracking-tight"
+                  >
+                    {depot.deIntitule}
+                  </th>
+                ))}
+                <th className="px-3 py-2 text-center font-semibold text-xs whitespace-nowrap bg-[#3CBAAE] uppercase tracking-tight">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInventory.map((item, idx) => {
+                const isNewLength =
+                  idx === 0 || item.longueur !== filteredInventory[idx - 1].longueur;
+                return (
+                  <tr
+                    key={`${item.longueur}-${item.diametre}-${idx}`}
+                    className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} border-b border-gray-100 ${
+                      isNewLength && idx > 0 ? 'border-t-2 border-t-[#3CBAAE]/30' : ''
+                    }`}
+                  >
+                    {isNewLength && (
+                      <td
+                        className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] align-middle border-r border-[#3CBAAE]/30 border-b border-[#3CBAAE]/5 sticky left-0 z-20 w-24 text-sm shadow-[1px_0_0_0_rgba(60,186,174,0.1)]"
+                        rowSpan={
+                          filteredInventory.slice(idx).findIndex(
+                            nextItem => nextItem.longueur !== item.longueur
+                          ) === -1
+                            ? filteredInventory.length - idx
+                            : filteredInventory
+                                .slice(idx)
+                                .findIndex(nextItem => nextItem.longueur !== item.longueur)
+                        }
+                      >
+                        {item.longueur > 0 ? item.longueur : '-'}
+                      </td>
                     )}
-                    {item.diametre > 0 ? item.diametre.toFixed(2) : '-'}
-                  </td>
-                  {displayedDepots.map(displayDepot => {
-                    const depotData = item.depots.find(d => d.depotId === displayDepot.deNo);
+                    <td className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] sticky left-24 z-20 w-28 border-r border-[#3CBAAE]/10 text-sm relative">
+                      {idx > 0 && item.longueur === filteredInventory[idx - 1].longueur && (
+                        <div className="absolute top-0 left-2 right-2 h-[1px] bg-gray-200/60" />
+                      )}
+                      {item.diametre > 0 ? item.diametre.toFixed(2) : '-'}
+                    </td>
 
-                    if (viewMode === 'Quantité') {
-                      const totalQty = depotData ? depotData.items.reduce((sum, i) => sum + i.quantite, 0) : 0;
+                    {displayedDepots.map(displayDepot => {
+                      const depotData = item.depots.find(d => d.depotId === displayDepot.deNo);
+
+                      if (viewMode === 'Quantité') {
+                        const totalQty = depotData
+                          ? depotData.items.reduce((sum, i) => sum + i.quantite, 0)
+                          : 0;
+                        return (
+                          <td
+                            key={displayDepot.deNo}
+                            className="px-2 py-1.5 border-r border-gray-100 min-w-[100px] text-center"
+                          >
+                            {totalQty > 0 ? (
+                              <span className="text-sm font-bold text-[#3CBAAE]">{totalQty}</span>
+                            ) : (
+                              <span className="text-gray-300">-</span>
+                            )}
+                          </td>
+                        );
+                      }
+
                       return (
-                        <td key={displayDepot.deNo} className="px-2 py-1.5 border-r border-gray-100 min-w-[100px] text-center">
-                          {totalQty > 0 ? (
-                            <span className="text-sm font-bold text-[#3CBAAE]">
-                              {totalQty}
-                            </span>
-                          ) : (
-                            <span className="text-gray-300">-</span>
-                          )}
-                        </td>
-                      );
-                    }
+                        <td
+                          key={displayDepot.deNo}
+                          className="px-2 py-1.5 border-r border-gray-50 min-w-[100px]"
+                        >
+                          <div className="space-y-1">
+                            {depotData && depotData.items.length > 0 ? (
+                              depotData.items.map((detail, dIdx) => (
+                                <div key={dIdx}>
+                                  {viewMode === 'Lot' ? (
+                                    <div className="text-center text-gray-900 font-medium">
+                                      {detail.lot || '-'}
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className={`px-2 py-1 rounded text-center text-[11px] font-bold ${getCriticalClass(
+                                        detail.criticalPeriodMonths
+                                      )}`}
+                                    >
+                                      {detail.sousFamille}:{' '}
+                                      {detail.dateExpiration
+                                        ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', {
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                          })
+                                        : '-'}
+                                      ({detail.quantite})
+                                    </div>
+                                  )}
 
-                    return (
-                      <td key={displayDepot.deNo} className="px-2 py-1.5 border-r border-gray-50 min-w-[100px]">
-                        <div className="space-y-1">
-                          {depotData && depotData.items.length > 0 ? (
-                            depotData.items.map((detail, dIdx) => (
-                              <div key={dIdx}>
-                                {/* Info Box */}
-                                {viewMode === 'Lot' ? (
-                                  <div className="text-center text-gray-900 font-medium">
-                                    {detail.lot || '-'}
-                                  </div>
-                                ) : ( // Default to 'Date' view logic
-                                  <div className={`px-2 py-1 rounded text-center text-[11px] font-bold ${getCriticalClass(detail.criticalPeriodMonths)}`}>
-                                    {detail.sousFamille}: {detail.dateExpiration ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' }) : '-'}
-                                    ({detail.quantite})
-                                  </div>
-                                )}
-
-                                {/* Control Box */}
-                                {viewMode === 'Date' && (
-                                  <div className="flex items-center justify-center gap-2 mt-1 py-1 px-2 bg-white rounded border border-gray-200 shadow-sm h-7">
-                                    <button
-                                      className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-all active:scale-90"
-                                      onClick={async (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (detail.quantite > 0) {
+                                  {viewMode === 'Date' && (
+                                    <div className="flex items-center justify-center gap-2 mt-1 py-1 px-2 bg-white rounded border border-gray-200 shadow-sm h-7">
+                                      <button
+                                        className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-all active:scale-90"
+                                        onClick={async e => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          if (detail.quantite > 0) {
+                                            try {
+                                              updateLocalQuantity(detail.id, -1);
+                                              await inventoryApi.adjustQuantity(detail.id, -1);
+                                              toast.success('Mis à jour');
+                                            } catch (err: unknown) {
+                                              updateLocalQuantity(detail.id, 1);
+                                              const msg =
+                                                (err as any)?.response?.data ||
+                                                (err as Error)?.message ||
+                                                'Erreur';
+                                              toast.error(`Erreur: ${msg}`);
+                                            }
+                                          }
+                                        }}
+                                      >
+                                        <Minus className="h-3.5 w-3.5 stroke-[3px]" />
+                                      </button>
+                                      <span className="text-xs font-bold text-gray-900 w-6 text-center tabular-nums">
+                                        {detail.quantite}
+                                      </span>
+                                      <button
+                                        className="text-green-500 hover:bg-green-50 p-1 rounded-full transition-all active:scale-90"
+                                        onClick={async e => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
                                           try {
-                                            updateLocalQuantity(detail.id, -1);
-                                            await inventoryApi.adjustQuantity(detail.id, -1);
-                                            toast.success('Mis à jour');
-                                          } catch (err: any) {
                                             updateLocalQuantity(detail.id, 1);
-                                            const msg = err.response?.data || err.message || "Erreur";
+                                            await inventoryApi.adjustQuantity(detail.id, 1);
+                                            toast.success('Mis à jour');
+                                          } catch (err: unknown) {
+                                            updateLocalQuantity(detail.id, -1);
+                                            const msg =
+                                              (err as any)?.response?.data ||
+                                              (err as Error)?.message ||
+                                              'Erreur';
                                             toast.error(`Erreur: ${msg}`);
                                           }
-                                        }
-                                      }}
-                                    >
-                                      <Minus className="h-3.5 w-3.5 stroke-[3px]" />
-                                    </button>
-                                    <span className="text-xs font-bold text-gray-900 w-6 text-center tabular-nums">
-                                      {detail.quantite}
-                                    </span>
-                                    <button
-                                      className="text-green-500 hover:bg-green-50 p-1 rounded-full transition-all active:scale-90"
-                                      onClick={async (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        try {
-                                          updateLocalQuantity(detail.id, 1);
-                                          await inventoryApi.adjustQuantity(detail.id, 1);
-                                          toast.success('Mis à jour');
-                                        } catch (err: any) {
-                                          updateLocalQuantity(detail.id, -1);
-                                          const msg = err.response?.data || err.message || "Erreur";
-                                          toast.error(`Erreur: ${msg}`);
-                                        }
-                                      }}
-                                    >
-                                      <Plus className="h-3.5 w-3.5 stroke-[3px]" />
-                                    </button>
-                                  </div>
-                                )}
+                                        }}
+                                      >
+                                        <Plus className="h-3.5 w-3.5 stroke-[3px]" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="flex justify-center">
+                                <span className="text-gray-300">-</span>
                               </div>
-                            ))
-                          ) : (
-                            <div className="flex justify-center">
-                              <span className="text-gray-300">-</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    );
-                  })}
-                  <td className="px-3 py-1.5 text-center font-bold text-[#3CBAAE] bg-[#f0fdfc] border-l border-[#3CBAAE]/10 text-sm">
-                    {item.total}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+
+                    <td className="px-3 py-1.5 text-center font-bold text-[#3CBAAE] bg-[#f0fdfc] border-l border-[#3CBAAE]/10 text-sm">
+                      {item.total}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

@@ -383,6 +383,7 @@ function SousFamillesPage() {
   );
 }
 
+// ── FIXED: stable useEffect dependency + cancellation token ─────────────────
 function InventoryPage() {
   const location = useLocation();
   const [inventory, setInventory] = useState<InventoryGroupView[]>([]);
@@ -390,31 +391,46 @@ function InventoryPage() {
   const [sousFamilles, setSousFamilles] = useState<SousFamille[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Derive a stable string key from the filter so useEffect only re-runs
+  // when the actual filter values change, not on every object re-creation.
+  const filterEtat = (location.state as any)?.filterEtat as Etat | undefined;
+  const filterKey = filterEtat
+    ? JSON.stringify({ id: filterEtat.id, familles: filterEtat.familles, depots: filterEtat.depots })
+    : 'none';
+
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchData() {
+      setLoading(true);
       try {
-        const filterEtat = (location.state as any)?.filterEtat;
-        const filter = filterEtat ? {
-          familles: filterEtat.familles,
-          depots: filterEtat.depots
-        } : {};
+        const filter = filterEtat
+          ? { familles: filterEtat.familles, depots: filterEtat.depots }
+          : {};
 
         const [invRes, depRes, sfRes] = await Promise.all([
           inventoryApi.filter(filter),
           depotApi.getAll(),
-          sousFamilleApi.getAll()
+          sousFamilleApi.getAll(),
         ]);
-        setInventory(invRes.data);
-        setDepots(depRes.data);
-        setSousFamilles(sfRes.data);
-      } catch (error) {
-        toast.error("Erreur lors du chargement de l'inventaire");
+
+        if (!cancelled) {
+          setInventory(invRes.data);
+          setDepots(depRes.data);
+          setSousFamilles(sfRes.data);
+        }
+      } catch {
+        if (!cancelled) toast.error("Erreur lors du chargement de l'inventaire");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
+
     fetchData();
-  }, [location.state]);
+    // Cleanup: ignore stale results if component unmounts before request completes
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]); // stable string — only re-fetches when filter actually changes
 
   if (loading) {
     return (
@@ -437,7 +453,6 @@ function InventoryPage() {
   );
 }
 
-// ── NEW: Article Stock Page ───────────────────────────────────────────────────
 function ArticleStockPage() {
   return (
     <Layout fullWidth>
@@ -563,7 +578,6 @@ function UtilisateursPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-800">Gestion des Utilisateurs</h2>
           {isAdmin && (
@@ -576,7 +590,6 @@ function UtilisateursPage() {
           )}
         </div>
 
-        {/* Add form */}
         {showForm && isAdmin && (
           <div className="bg-white rounded-xl shadow border border-gray-100 p-6">
             <h3 className="text-lg font-semibold mb-4 text-gray-700">Nouvel utilisateur</h3>
@@ -586,47 +599,33 @@ function UtilisateursPage() {
             <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur *</label>
-                <input
-                  type="text" required
-                  value={formData.username}
+                <input type="text" required value={formData.username}
                   onChange={e => setFormData(p => ({ ...p, username: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
-                />
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
-                <input
-                  type="text" required
-                  value={formData.fullName}
+                <input type="text" required value={formData.fullName}
                   onChange={e => setFormData(p => ({ ...p, fullName: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
-                />
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input
-                  type="email" required
-                  value={formData.email}
+                <input type="email" required value={formData.email}
                   onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
-                />
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
-                <input
-                  type="password" required minLength={6}
-                  value={formData.password}
+                <input type="password" required minLength={6} value={formData.password}
                   onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
-                />
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
-                <select
-                  value={formData.role}
+                <select value={formData.role}
                   onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]"
-                >
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]">
                   <option value="User">Utilisateur</option>
                   <option value="Admin">Administrateur</option>
                 </select>
@@ -634,14 +633,13 @@ function UtilisateursPage() {
               <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Annuler</Button>
                 <Button type="submit" className="bg-[#3CBAAE] hover:bg-[#35a89d] text-white" disabled={formLoading}>
-                  {formLoading ? 'Création...' : 'Créer l\'utilisateur'}
+                  {formLoading ? 'Création...' : "Créer l'utilisateur"}
                 </Button>
               </div>
             </form>
           </div>
         )}
 
-        {/* Table */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -670,10 +668,8 @@ function UtilisateursPage() {
                     {isAdmin && (
                       <td className="px-4 py-3">
                         {u.id !== currentUser?.id && (
-                          <button
-                            onClick={() => handleDelete(u.id)}
-                            className="text-red-500 hover:text-red-700 text-xs font-medium border border-red-200 px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                          >
+                          <button onClick={() => handleDelete(u.id)}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium border border-red-200 px-2 py-1 rounded hover:bg-red-50 transition-colors">
                             Supprimer
                           </button>
                         )}
@@ -695,7 +691,6 @@ function UtilisateursPage() {
 
 function ProfilePage() {
   const { user } = useAuth();
-
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -705,9 +700,7 @@ function ProfilePage() {
               <User className="h-16 w-16 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-center">{user?.fullName}</h2>
-            <p className="text-[#e2f5f3] text-sm font-medium mt-1 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
-              {user?.role}
-            </p>
+            <p className="text-[#e2f5f3] text-sm font-medium mt-1 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">{user?.role}</p>
           </div>
           <div className="md:w-2/3 p-8">
             <div className="flex justify-between items-start mb-6">
@@ -716,7 +709,6 @@ function ProfilePage() {
                 Modifier le profil
               </Button>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-1">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Nom complet</p>
@@ -732,12 +724,9 @@ function ProfilePage() {
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Rôle système</p>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#3CBAAE]/10 text-[#3CBAAE]">
-                  {user?.role}
-                </span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#3CBAAE]/10 text-[#3CBAAE]">{user?.role}</span>
               </div>
             </div>
-
             <div className="mt-8 pt-8 border-t border-gray-100">
               <h4 className="text-sm font-bold text-gray-800 mb-4">Statistiques d'activité</h4>
               <div className="grid grid-cols-3 gap-4 text-center">
@@ -776,25 +765,20 @@ function ParametresPage() {
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
         <h2 className="text-2xl font-bold text-gray-800">Paramètres</h2>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-4">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <button className="w-full px-4 py-3 text-left flex items-center gap-3 bg-[#3CBAAE]/5 text-[#3CBAAE] border-l-4 border-[#3CBAAE]">
-                <User className="h-4 w-4" />
-                <span className="font-medium text-sm">Général</span>
+                <User className="h-4 w-4" /><span className="font-medium text-sm">Général</span>
               </button>
               <button className="w-full px-4 py-3 text-left flex items-center gap-3 text-gray-600 hover:bg-gray-50 transition-colors">
-                <Bell className="h-4 w-4" />
-                <span className="font-medium text-sm">Notifications</span>
+                <Bell className="h-4 w-4" /><span className="font-medium text-sm">Notifications</span>
               </button>
               <button className="w-full px-4 py-3 text-left flex items-center gap-3 text-gray-600 hover:bg-gray-50 transition-colors">
-                <Settings className="h-4 w-4" />
-                <span className="font-medium text-sm">Système</span>
+                <Settings className="h-4 w-4" /><span className="font-medium text-sm">Système</span>
               </button>
             </div>
           </div>
-
           <div className="md:col-span-2 space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
               <div>
@@ -805,10 +789,7 @@ function ParametresPage() {
                       <p className="font-medium text-sm text-gray-700">Mode Sombre</p>
                       <p className="text-xs text-gray-400">Activer l'interface sombre (Bientôt)</p>
                     </div>
-                    <Switch
-                      checked={darkMode}
-                      onCheckedChange={setDarkMode}
-                    />
+                    <Switch checked={darkMode} onCheckedChange={setDarkMode} />
                   </div>
                   <div className="flex items-center justify-between py-3 border-b border-gray-50">
                     <div>
@@ -822,26 +803,17 @@ function ParametresPage() {
                       <p className="font-medium text-sm text-gray-700">Notifications Push</p>
                       <p className="text-xs text-gray-400">Alerte de stock en temps réel</p>
                     </div>
-                    <Switch
-                      checked={notifications}
-                      onCheckedChange={setNotifications}
-                    />
+                    <Switch checked={notifications} onCheckedChange={setNotifications} />
                   </div>
                 </div>
               </div>
-
               <div className="pt-4">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 text-red-600">Sécurité</h3>
-                <Button
-                  variant="outline"
-                  className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                  onClick={handleResetPassword}
-                >
+                <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700" onClick={handleResetPassword}>
                   Réinitialiser le mot de passe
                 </Button>
               </div>
             </div>
-
             <div className="bg-gradient-to-r from-[#3CBAAE] to-[#2d8d84] rounded-xl p-6 text-white shadow-lg">
               <h4 className="font-bold mb-1">Version Pro active</h4>
               <p className="text-xs opacity-90 mb-4">Votre licence est valide jusqu'au 31 Décembre 2025.</p>
@@ -858,7 +830,6 @@ function ParametresPage() {
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -866,11 +837,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
@@ -880,12 +847,8 @@ function AppRoutes() {
   useEffect(() => {
     if (isAuthenticated && user) {
       signalRService.connect(user.fullName || 'Anonymous')
-        .then(() => {
-          toast.success('Connecté au serveur en temps réel');
-        })
-        .catch(() => {
-          toast.error('Impossible de se connecter au serveur en temps réel');
-        });
+        .then(() => toast.success('Connecté au serveur en temps réel'))
+        .catch(() => toast.error('Impossible de se connecter au serveur en temps réel'));
 
       signalRService.onNotification((notification) => {
         toast[notification.type as 'success' | 'error' | 'info' | 'warning'](notification.title, {
@@ -893,47 +856,23 @@ function AppRoutes() {
         });
       });
 
-      return () => {
-        signalRService.disconnect();
-      };
+      return () => { signalRService.disconnect(); };
     }
   }, [isAuthenticated, user]);
 
   return (
     <Routes>
-      <Route path="/login" element={
-        isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />
-      } />
-      <Route path="/" element={
-        <ProtectedRoute><Dashboard /></ProtectedRoute>
-      } />
-      <Route path="/familles" element={
-        <ProtectedRoute><FamillesPage /></ProtectedRoute>
-      } />
-      <Route path="/inventory" element={
-        <ProtectedRoute><InventoryPage /></ProtectedRoute>
-      } />
-      <Route path="/article-stock" element={
-        <ProtectedRoute><ArticleStockPage /></ProtectedRoute>
-      } />
-      <Route path="/sous-familles" element={
-        <ProtectedRoute><SousFamillesPage /></ProtectedRoute>
-      } />
-      <Route path="/etats" element={
-        <ProtectedRoute><EtatsPage /></ProtectedRoute>
-      } />
-      <Route path="/depots" element={
-        <ProtectedRoute><DepotsPage /></ProtectedRoute>
-      } />
-      <Route path="/utilisateurs" element={
-        <ProtectedRoute><UtilisateursPage /></ProtectedRoute>
-      } />
-      <Route path="/parametres" element={
-        <ProtectedRoute><ParametresPage /></ProtectedRoute>
-      } />
-      <Route path="/profil" element={
-        <ProtectedRoute><ProfilePage /></ProtectedRoute>
-      } />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginForm />} />
+      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/familles" element={<ProtectedRoute><FamillesPage /></ProtectedRoute>} />
+      <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
+      <Route path="/article-stock" element={<ProtectedRoute><ArticleStockPage /></ProtectedRoute>} />
+      <Route path="/sous-familles" element={<ProtectedRoute><SousFamillesPage /></ProtectedRoute>} />
+      <Route path="/etats" element={<ProtectedRoute><EtatsPage /></ProtectedRoute>} />
+      <Route path="/depots" element={<ProtectedRoute><DepotsPage /></ProtectedRoute>} />
+      <Route path="/utilisateurs" element={<ProtectedRoute><UtilisateursPage /></ProtectedRoute>} />
+      <Route path="/parametres" element={<ProtectedRoute><ParametresPage /></ProtectedRoute>} />
+      <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
     </Routes>
   );
 }
