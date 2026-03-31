@@ -1,0 +1,722 @@
+2026-03-30 10:48:44.346 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 10:48:44.382 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 10:49:02.356 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-03-30 10:49:02.358 +01:00 [ERR] An error occurred while seeding the database
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.Open(SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, IEnumerable`1 parameters)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, Object[] parameters)
+   at KTBioAPI.Data.DbInitializer.Initialize(KTBioContext context) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Data\DbInitializer.cs:line 15
+   at Program.<Main>$(String[] args) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Program.cs:line 149
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 10:49:02.525 +01:00 [INF] KTBio API starting...
+2026-03-30 10:49:04.590 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 1.5405 ms
+2026-03-30 10:49:04.590 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 1.5470 ms
+2026-03-30 10:49:04.708 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 91.4254 ms
+2026-03-30 10:49:04.717 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 3.5026 ms
+2026-03-30 10:49:16.714 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 0.1149 ms
+2026-03-30 10:49:32.979 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-03-30 10:49:32.993 +01:00 [ERR] An exception occurred while iterating over the results of a query for context type 'KTBioAPI.Data.KTBioContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 10:49:33.004 +01:00 [ERR] Error during login for user: anis.bk
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at KTBioAPI.Controllers.AccountController.Login(LoginRequest request) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Controllers\AccountController.cs:line 117
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 10:49:33.025 +01:00 [ERR] HTTP POST /api/Account/Login responded 500 in 16306.7094 ms
+2026-03-30 10:49:40.536 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 0.0745 ms
+2026-03-30 10:49:40.601 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-03-30 10:49:40.604 +01:00 [ERR] An exception occurred while iterating over the results of a query for context type 'KTBioAPI.Data.KTBioContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.InternalOpenAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.InternalOpenAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 10:49:40.612 +01:00 [ERR] Error during login for user: anis.bk
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.InternalOpenAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at KTBioAPI.Controllers.AccountController.Login(LoginRequest request) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Controllers\AccountController.cs:line 117
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 10:49:40.619 +01:00 [ERR] HTTP POST /api/Account/Login responded 500 in 79.0432 ms
+2026-03-30 11:04:28.399 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 0.0855 ms
+2026-03-30 11:04:44.390 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-03-30 11:04:44.392 +01:00 [ERR] An exception occurred while iterating over the results of a query for context type 'KTBioAPI.Data.KTBioContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:04:44.400 +01:00 [ERR] Error during login for user: anis.bk
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at KTBioAPI.Controllers.AccountController.Login(LoginRequest request) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Controllers\AccountController.cs:line 117
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:04:44.407 +01:00 [ERR] HTTP POST /api/Account/Login responded 500 in 16003.7889 ms
+2026-03-30 11:04:45.501 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 0.0628 ms
+2026-03-30 11:04:45.507 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-03-30 11:04:45.510 +01:00 [ERR] An exception occurred while iterating over the results of a query for context type 'KTBioAPI.Data.KTBioContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.InternalOpenAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.InternalOpenAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:04:45.517 +01:00 [ERR] Error during login for user: anis.bk
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.InternalOpenAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at KTBioAPI.Controllers.AccountController.Login(LoginRequest request) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Controllers\AccountController.cs:line 117
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:04:45.524 +01:00 [ERR] HTTP POST /api/Account/Login responded 500 in 19.2978 ms
+2026-03-30 11:05:13.979 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 0.1231 ms
+2026-03-30 11:05:29.982 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-03-30 11:05:29.984 +01:00 [ERR] An exception occurred while iterating over the results of a query for context type 'KTBioAPI.Data.KTBioContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:05:29.992 +01:00 [ERR] Error during login for user: anis.bk
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at KTBioAPI.Controllers.AccountController.Login(LoginRequest request) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Controllers\AccountController.cs:line 117
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:05:29.999 +01:00 [ERR] HTTP POST /api/Account/Login responded 500 in 16015.4781 ms
+2026-03-30 11:05:32.689 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 0.1221 ms
+2026-03-30 11:05:48.685 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-03-30 11:05:48.688 +01:00 [ERR] An exception occurred while iterating over the results of a query for context type 'KTBioAPI.Data.KTBioContext'.
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:05:48.695 +01:00 [ERR] Error during login for user: anis.bk
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.WaitForPendingOpen()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleOrDefaultAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at KTBioAPI.Controllers.AccountController.Login(LoginRequest request) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Controllers\AccountController.cs:line 117
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-03-30 11:05:48.701 +01:00 [ERR] HTTP POST /api/Account/Login responded 500 in 16008.5374 ms
+2026-03-30 11:09:43.722 +01:00 [INF] KTBio API stopped
+2026-03-30 11:10:17.781 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 11:10:17.811 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 11:10:19.664 +01:00 [INF] Database initialized successfully
+2026-03-30 11:10:19.755 +01:00 [INF] KTBio API starting...
+2026-03-30 11:10:55.040 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 1.1756 ms
+2026-03-30 11:10:55.658 +01:00 [WRN] Failed login attempt for user: anis.bk
+2026-03-30 11:10:55.682 +01:00 [INF] HTTP POST /api/Account/Login responded 200 in 629.2095 ms
+2026-03-30 11:11:22.353 +01:00 [INF] HTTP OPTIONS /api/Account/Login responded 204 in 0.5409 ms
+2026-03-30 11:11:22.676 +01:00 [INF] User anis.bk logged in successfully
+2026-03-30 11:11:22.680 +01:00 [INF] HTTP POST /api/Account/Login responded 200 in 322.3181 ms
+2026-03-30 11:11:22.697 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.2988 ms
+2026-03-30 11:11:22.727 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 17.9124 ms
+2026-03-30 11:11:22.749 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 0.1571 ms
+2026-03-30 11:11:22.750 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.0680 ms
+2026-03-30 11:11:22.750 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0430 ms
+2026-03-30 11:11:22.751 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0690 ms
+2026-03-30 11:11:22.752 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 0.0633 ms
+2026-03-30 11:11:22.752 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0311 ms
+2026-03-30 11:11:22.754 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.0800 ms
+2026-03-30 11:11:22.755 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0533 ms
+2026-03-30 11:11:22.756 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0810 ms
+2026-03-30 11:11:22.757 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.2243 ms
+2026-03-30 11:11:22.860 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 97.3437 ms
+2026-03-30 11:11:22.866 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 4.3936 ms
+2026-03-30 11:11:22.869 +01:00 [INF] HTTP GET /api/Etat responded 200 in 107.1140 ms
+2026-03-30 11:11:22.870 +01:00 [INF] HTTP GET /api/Depot responded 200 in 103.5981 ms
+2026-03-30 11:11:22.872 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 110.3636 ms
+2026-03-30 11:11:22.874 +01:00 [INF] HTTP GET /api/Etat responded 200 in 3.0664 ms
+2026-03-30 11:11:22.876 +01:00 [INF] HTTP GET /api/Depot responded 200 in 3.9379 ms
+2026-03-30 11:11:22.878 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 4.2372 ms
+2026-03-30 11:11:22.878 +01:00 [INF] HTTP GET /api/Famille responded 200 in 116.2107 ms
+2026-03-30 11:11:22.883 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.5271 ms
+2026-03-30 11:11:26.511 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 5.1529 ms
+2026-03-30 11:11:26.516 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 3.3126 ms
+2026-03-30 11:11:58.402 +01:00 [INF] HTTP OPTIONS /api/Account/AddUtilisateur responded 204 in 0.0564 ms
+2026-03-30 11:11:58.929 +01:00 [INF] Admin created user Heni
+2026-03-30 11:11:58.935 +01:00 [INF] HTTP POST /api/Account/AddUtilisateur responded 200 in 528.9883 ms
+2026-03-30 11:11:58.942 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.3252 ms
+2026-03-30 11:11:58.959 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 6.3021 ms
+2026-03-30 11:12:11.184 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0538 ms
+2026-03-30 11:12:11.185 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0296 ms
+2026-03-30 11:12:11.194 +01:00 [INF] HTTP GET /api/Depot responded 200 in 5.5785 ms
+2026-03-30 11:12:11.200 +01:00 [INF] HTTP GET /api/Depot responded 200 in 4.9234 ms
+2026-03-30 11:12:12.324 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 0.0410 ms
+2026-03-30 11:12:12.325 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0317 ms
+2026-03-30 11:12:12.325 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.0202 ms
+2026-03-30 11:12:12.325 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 0.0243 ms
+2026-03-30 11:12:12.327 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0455 ms
+2026-03-30 11:12:12.327 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.0364 ms
+2026-03-30 11:12:12.332 +01:00 [INF] HTTP GET /api/Depot responded 200 in 5.8029 ms
+2026-03-30 11:12:12.333 +01:00 [INF] HTTP GET /api/Etat responded 200 in 4.0710 ms
+2026-03-30 11:12:12.336 +01:00 [INF] HTTP GET /api/Depot responded 200 in 3.2743 ms
+2026-03-30 11:12:12.337 +01:00 [INF] HTTP GET /api/Famille responded 200 in 6.2989 ms
+2026-03-30 11:12:12.337 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 4.5252 ms
+2026-03-30 11:12:12.337 +01:00 [INF] HTTP GET /api/Etat responded 200 in 2.1566 ms
+2026-03-30 11:12:12.341 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.7193 ms
+2026-03-30 11:12:12.341 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 2.8694 ms
+2026-03-30 11:12:13.523 +01:00 [INF] HTTP GET /api/Depot responded 200 in 5.2561 ms
+2026-03-30 11:12:13.529 +01:00 [INF] HTTP GET /api/Depot responded 200 in 4.0652 ms
+2026-03-30 11:12:14.350 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0267 ms
+2026-03-30 11:12:14.351 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0215 ms
+2026-03-30 11:12:14.357 +01:00 [INF] HTTP GET /api/Famille responded 200 in 6.6916 ms
+2026-03-30 11:12:14.358 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 4.0545 ms
+2026-03-30 11:12:14.362 +01:00 [INF] HTTP GET /api/Famille responded 200 in 3.4064 ms
+2026-03-30 11:12:14.362 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 2.5608 ms
+2026-03-30 11:12:15.017 +01:00 [INF] HTTP GET /api/Etat responded 200 in 3.5381 ms
+2026-03-30 11:12:15.021 +01:00 [INF] HTTP GET /api/Depot responded 200 in 7.5439 ms
+2026-03-30 11:12:15.021 +01:00 [INF] HTTP GET /api/Etat responded 200 in 2.2841 ms
+2026-03-30 11:12:15.024 +01:00 [INF] HTTP GET /api/Depot responded 200 in 1.5859 ms
+2026-03-30 11:12:15.024 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 10.7285 ms
+2026-03-30 11:12:15.026 +01:00 [INF] HTTP GET /api/Famille responded 200 in 12.5395 ms
+2026-03-30 11:12:15.028 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 2.0841 ms
+2026-03-30 11:12:15.029 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.6778 ms
+2026-03-30 11:12:15.495 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.6427 ms
+2026-03-30 11:12:15.501 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 6.9476 ms
+2026-03-30 11:12:15.504 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.9942 ms
+2026-03-30 11:12:15.506 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 4.3665 ms
+2026-03-30 11:12:16.168 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 1.7368 ms
+2026-03-30 11:12:16.168 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.7615 ms
+2026-03-30 11:12:16.168 +01:00 [INF] HTTP GET /api/Depot responded 200 in 0.9944 ms
+2026-03-30 11:12:16.168 +01:00 [INF] HTTP GET /api/Etat responded 200 in 1.8272 ms
+2026-03-30 11:12:16.173 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.4018 ms
+2026-03-30 11:12:16.173 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 2.4018 ms
+2026-03-30 11:12:16.173 +01:00 [INF] HTTP GET /api/Depot responded 200 in 2.3934 ms
+2026-03-30 11:12:16.173 +01:00 [INF] HTTP GET /api/Etat responded 200 in 2.3190 ms
+2026-03-30 11:12:19.028 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0311 ms
+2026-03-30 11:12:19.028 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0311 ms
+2026-03-30 11:12:19.031 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 2.6570 ms
+2026-03-30 11:12:19.034 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.1478 ms
+2026-03-30 11:12:19.034 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 1.7075 ms
+2026-03-30 11:12:19.038 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.2122 ms
+2026-03-30 11:12:19.883 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.5602 ms
+2026-03-30 11:12:19.887 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.2791 ms
+2026-03-30 11:12:22.383 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0246 ms
+2026-03-30 11:12:22.384 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0166 ms
+2026-03-30 11:12:22.386 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.5645 ms
+2026-03-30 11:12:22.390 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.1328 ms
+2026-03-30 11:12:22.390 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 2.7740 ms
+2026-03-30 11:12:22.395 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 3.2519 ms
+2026-03-30 11:23:31.985 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 729227.9427 ms
+2026-03-30 11:52:21.330 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.0346 ms
+2026-03-30 11:52:21.339 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.3053 ms
+2026-03-30 11:56:01.620 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 220274.9548 ms
+2026-03-30 11:56:01.827 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.0401 ms
+2026-03-30 11:56:01.830 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0383 ms
+2026-03-30 11:56:01.831 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0243 ms
+2026-03-30 11:56:01.834 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.2634 ms
+2026-03-30 11:56:01.845 +01:00 [INF] HTTP GET /api/Famille responded 200 in 9.0571 ms
+2026-03-30 11:56:01.846 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 10.7787 ms
+2026-03-30 11:56:01.848 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.6374 ms
+2026-03-30 11:56:01.848 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 1.5976 ms
+2026-03-30 11:56:05.295 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0449 ms
+2026-03-30 11:56:05.295 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0163 ms
+2026-03-30 11:56:05.302 +01:00 [INF] HTTP GET /api/Depot responded 200 in 3.5992 ms
+2026-03-30 11:56:05.305 +01:00 [INF] HTTP GET /api/Depot responded 200 in 1.5733 ms
+2026-03-30 11:57:34.824 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0389 ms
+2026-03-30 11:57:34.825 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0172 ms
+2026-03-30 11:57:34.825 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0172 ms
+2026-03-30 11:57:34.825 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0080 ms
+2026-03-30 11:57:34.830 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 3.2475 ms
+2026-03-30 11:57:34.834 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 1.7840 ms
+2026-03-30 11:57:34.834 +01:00 [INF] HTTP GET /api/Famille responded 200 in 5.1585 ms
+2026-03-30 11:57:34.838 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.9684 ms
+2026-03-30 11:57:35.216 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.5593 ms
+2026-03-30 11:57:35.220 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.6975 ms
+2026-03-30 11:58:24.783 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0320 ms
+2026-03-30 11:58:24.784 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0243 ms
+2026-03-30 11:58:24.784 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0248 ms
+2026-03-30 11:58:24.784 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0145 ms
+2026-03-30 11:58:24.790 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 3.2568 ms
+2026-03-30 11:58:24.794 +01:00 [INF] HTTP GET /api/Famille responded 200 in 5.4394 ms
+2026-03-30 11:58:24.795 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 2.1712 ms
+2026-03-30 11:58:24.797 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.4206 ms
+2026-03-30 12:03:29.781 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0445 ms
+2026-03-30 12:03:29.781 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0446 ms
+2026-03-30 12:03:29.791 +01:00 [INF] HTTP GET /api/Famille responded 200 in 6.0786 ms
+2026-03-30 12:03:29.793 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.5995 ms
+2026-03-30 12:03:31.290 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0406 ms
+2026-03-30 12:03:31.290 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0248 ms
+2026-03-30 12:03:31.294 +01:00 [INF] HTTP GET /api/Famille responded 200 in 3.0848 ms
+2026-03-30 12:03:31.301 +01:00 [INF] HTTP GET /api/Famille responded 200 in 5.5071 ms
+2026-03-30 12:03:31.302 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 8.0600 ms
+2026-03-30 12:03:31.306 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 2.9003 ms
+2026-03-30 12:03:31.982 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 0.0281 ms
+2026-03-30 12:03:31.982 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.0184 ms
+2026-03-30 12:03:31.983 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0143 ms
+2026-03-30 12:03:31.983 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 0.0102 ms
+2026-03-30 12:03:31.983 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.0124 ms
+2026-03-30 12:03:31.983 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0181 ms
+2026-03-30 12:03:31.985 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.8652 ms
+2026-03-30 12:03:31.988 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.6133 ms
+2026-03-30 12:03:31.988 +01:00 [INF] HTTP GET /api/Etat responded 200 in 2.6602 ms
+2026-03-30 12:03:31.990 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 2.1951 ms
+2026-03-30 12:03:31.993 +01:00 [INF] HTTP GET /api/Depot responded 200 in 3.4581 ms
+2026-03-30 12:03:31.994 +01:00 [INF] HTTP GET /api/Etat responded 200 in 2.2707 ms
+2026-03-30 12:03:31.996 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 1.4153 ms
+2026-03-30 12:03:31.998 +01:00 [INF] HTTP GET /api/Depot responded 200 in 1.2534 ms
+2026-03-30 12:03:32.405 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.4918 ms
+2026-03-30 12:03:32.405 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 1.6454 ms
+2026-03-30 12:03:32.408 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.5206 ms
+2026-03-30 12:03:32.408 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 1.5512 ms
+2026-03-30 12:03:32.712 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.2938 ms
+2026-03-30 12:03:32.715 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.8755 ms
+2026-03-30 12:14:42.771 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 1120931.4508 ms
+2026-03-30 12:14:54.708 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.0416 ms
+2026-03-30 12:14:54.721 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.1803 ms
+2026-03-30 12:25:16.585 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 621858.8865 ms
+2026-03-30 12:41:08.973 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.0316 ms
+2026-03-30 12:41:09.114 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.1930 ms
+2026-03-30 12:45:32.518 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 263383.7045 ms
+2026-03-30 12:45:32.766 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.0361 ms
+2026-03-30 12:45:32.768 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0160 ms
+2026-03-30 12:45:32.768 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0121 ms
+2026-03-30 12:45:32.772 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.2605 ms
+2026-03-30 12:45:32.782 +01:00 [INF] HTTP GET /api/Famille responded 200 in 10.0573 ms
+2026-03-30 12:45:32.784 +01:00 [INF] HTTP GET /api/Famille responded 200 in 1.3177 ms
+2026-03-30 12:56:32.993 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 660216.2682 ms
+2026-03-30 13:07:01.459 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.0391 ms
+2026-03-30 13:07:01.472 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.3808 ms
+2026-03-30 13:07:10.910 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 9434.5496 ms
+2026-03-30 13:07:10.917 +01:00 [INF] KTBio API stopped
+2026-03-30 14:40:38.249 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 14:40:38.287 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 14:40:40.872 +01:00 [INF] Database initialized successfully
+2026-03-30 14:40:41.026 +01:00 [INF] KTBio API starting...
+2026-03-30 14:40:46.080 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 1.1739 ms
+2026-03-30 14:40:46.080 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 1.2142 ms
+2026-03-30 14:40:46.247 +01:00 [INF] HTTP GET /api/Famille responded 200 in 146.2410 ms
+2026-03-30 14:40:46.307 +01:00 [INF] HTTP GET /api/Famille responded 200 in 58.6563 ms
+2026-03-30 14:41:26.702 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.1462 ms
+2026-03-30 14:41:26.702 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.1681 ms
+2026-03-30 14:41:26.726 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 16.8386 ms
+2026-03-30 14:41:26.730 +01:00 [INF] HTTP OPTIONS /api/Account/Refresh responded 204 in 0.0627 ms
+2026-03-30 14:41:26.730 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 1.5621 ms
+2026-03-30 14:41:26.785 +01:00 [INF] HTTP POST /api/Account/Refresh responded 200 in 50.2921 ms
+2026-03-30 14:41:26.785 +01:00 [INF] HTTP POST /api/Account/Refresh responded 200 in 48.6723 ms
+2026-03-30 14:41:26.854 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 65.7171 ms
+2026-03-30 14:41:26.859 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 3.5479 ms
+2026-03-30 14:41:31.417 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0682 ms
+2026-03-30 14:41:31.417 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 0.0683 ms
+2026-03-30 14:41:31.448 +01:00 [INF] HTTP GET /api/Depot responded 200 in 25.5015 ms
+2026-03-30 14:41:31.452 +01:00 [INF] HTTP GET /api/Depot responded 200 in 2.7573 ms
+2026-03-30 21:46:02.847 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 21:46:02.884 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-03-30 21:46:04.914 +01:00 [INF] Database initialized successfully
+2026-03-30 21:46:05.044 +01:00 [INF] KTBio API starting...
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 1.3982 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 1.4459 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 1.4288 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 1.4083 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 1.4320 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 1.4389 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 1.4684 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 1.4134 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 1.4635 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 1.4829 ms
+2026-03-30 21:46:14.396 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 1.4526 ms
+2026-03-30 21:46:14.460 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 39.9700 ms
+2026-03-30 21:46:14.506 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 80.2065 ms
+2026-03-30 21:46:14.512 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 2.1805 ms
+2026-03-30 21:46:14.531 +01:00 [INF] HTTP OPTIONS /api/Account/Refresh responded 204 in 0.0720 ms
+2026-03-30 21:46:14.532 +01:00 [INF] HTTP OPTIONS /api/Account/Refresh responded 204 in 0.0569 ms
+2026-03-30 21:46:14.583 +01:00 [INF] HTTP POST /api/Account/Refresh responded 200 in 47.5410 ms
+2026-03-30 21:46:14.583 +01:00 [INF] HTTP POST /api/Account/Refresh responded 200 in 44.7241 ms
+2026-03-30 21:46:14.589 +01:00 [INF] HTTP GET /api/Depot responded 200 in 163.2848 ms
+2026-03-30 21:46:14.589 +01:00 [INF] HTTP GET /api/Famille responded 200 in 163.7190 ms
+2026-03-30 21:46:14.612 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 185.7832 ms
+2026-03-30 21:46:14.615 +01:00 [INF] HTTP GET /api/Etat responded 200 in 189.5741 ms
+2026-03-30 21:46:14.629 +01:00 [INF] HTTP GET /api/Etat responded 200 in 11.9825 ms
+2026-03-30 21:46:14.631 +01:00 [INF] HTTP GET /api/Famille responded 200 in 40.6305 ms
+2026-03-30 21:46:14.631 +01:00 [INF] HTTP GET /api/Depot responded 200 in 41.6974 ms
+2026-03-30 21:46:14.632 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 17.5858 ms
+2026-03-30 21:46:14.643 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 54.6753 ms
+2026-03-30 21:46:14.647 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 2.4012 ms
+2026-03-30 21:48:41.814 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.0853 ms
+2026-03-30 21:48:41.814 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 0.2059 ms
+2026-03-30 21:48:41.823 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 4.5434 ms
+2026-03-30 21:48:41.829 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 3.9788 ms

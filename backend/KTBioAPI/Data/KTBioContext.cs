@@ -882,7 +882,7 @@ public partial class KTBioContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         //=> optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=KTBIO2014;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False;");
-        => optionsBuilder.UseSqlServer("Server=.\\SQLEXPRESS;Database=KTBIO2014;User Id=sa;Password=SQL2025;TrustServerCertificate=True;Encrypt=False;");
+        => optionsBuilder.UseSqlServer("Server=MEGATRON\\SQLEXPRESS;Database=KTBIO2014;User Id=sa;Password=Sql@2025++;TrustServerCertificate=True;Encrypt=False;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -36661,10 +36661,22 @@ public partial class KTBioContext : DbContext
                 .HasColumnType("numeric(38, 6)")
                 .HasColumnName("solde");
         });
-        modelBuilder.Entity<KTBioAPI.Models.Depot>().ToTable("App_Depots");
-        modelBuilder.Entity<KTBioAPI.Models.Famille>().ToTable("App_Familles");
+        // App_Depots et App_Familles supprimées — EF ne les mappe plus
+        // Les contrôleurs lisent directement F_DEPOT / F_FAMILLE (Sage)
+        modelBuilder.Ignore<KTBioAPI.Models.Depot>();
+        modelBuilder.Ignore<KTBioAPI.Models.Famille>();
         modelBuilder.Entity<KTBioAPI.Models.SousFamille>().ToTable("App_SousFamilles");
-        modelBuilder.Entity<KTBioAPI.Models.Utilisateur>().ToTable("App_Utilisateurs");
+        modelBuilder.Entity<KTBioAPI.Models.Utilisateur>(entity =>
+        {
+            entity.ToTable("App_Utilisateurs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Username).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.FullName).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Email).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Role).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.PasswordHash).HasMaxLength(400).IsRequired();
+        });
         modelBuilder.Entity<KTBioAPI.Models.InventoryItem>().ToTable("App_InventoryItems");
 
         OnModelCreatingPartial(modelBuilder);

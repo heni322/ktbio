@@ -148,7 +148,9 @@ C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\KTBioAPI.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\KTBioAPI.pdb
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Azure.Core.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Azure.Identity.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\BCrypt.Net-Next.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Humanizer.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Microsoft.CodeAnalysis.dll
@@ -176,6 +178,15 @@ C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Microsoft.SqlServer
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Mono.TextTemplating.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.AspNetCore.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.Extensions.Hosting.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.Extensions.Logging.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.Formatting.Compact.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.Settings.Configuration.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.Sinks.Console.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.Sinks.Debug.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Serilog.Sinks.File.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -265,6 +276,7 @@ C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.AssemblyIn
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.csproj.CoreCompileInputs.cache
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.sourcelink.json
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\scopedcss\bundle\KTBioAPI.styles.css
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\staticwebassets.development.json
@@ -281,3 +293,4 @@ C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\refint\KTBioAPI.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.pdb
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.genruntimeconfig.cache
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\ref\KTBioAPI.dll
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\appsettings.Production.json

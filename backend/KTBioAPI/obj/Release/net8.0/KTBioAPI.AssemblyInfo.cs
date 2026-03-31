@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("ktbioapi-secrets-2026")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("KTBioAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4834ba878e60a69839b612e9a1d20d4453edbf69")]
 [assembly: System.Reflection.AssemblyProductAttribute("KTBioAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KTBioAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

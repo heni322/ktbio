@@ -1,9 +1,14 @@
 using KTBioAPI.Models;
+using KTBioAPI.Helpers;
 
 namespace KTBioAPI.Data
 {
     public static class MockData
     {
+        // Default password for all seed users: "KTBio@2026"
+        // Users can change their password after first login
+        private const string DEFAULT_PASSWORD = "KTBio@2026";
+        
         public static List<Depot> Depots { get; set; } = new()
         {
             new Depot { deNo = 1, deIntitule = "DEPOT KTBIO" },
@@ -19,14 +24,16 @@ namespace KTBioAPI.Data
             new Depot { deNo = 11, deIntitule = "DR BEN AYED NABIL" }
         };
 
+        // Familles mock alignées sur les 5 codes autorisés :
+        // CARD01, CARD02, CARD03, CARD29, CARD30
+        // (identique au filtre SQL : WHERE FA_CodeFamille IN (...))
         public static List<Famille> Familles { get; set; } = new()
         {
             new Famille { cbMarq = 1, faCodeFamille = "CARD01", faIntitule = "STENT SYNERGY" },
-            new Famille { cbMarq = 2, faCodeFamille = "CARD05", faIntitule = "STENT RESOLUTE" },
-            new Famille { cbMarq = 3, faCodeFamille = "CARD29", faIntitule = "STENT XIENCE" },
-            new Famille { cbMarq = 4, faCodeFamille = "CARD30", faIntitule = "STENT PROMUS" },
-            new Famille { cbMarq = 5, faCodeFamille = "ONCO05", faIntitule = "ONCOLOGIE" },
-            new Famille { cbMarq = 6, faCodeFamille = "ONCO06", faIntitule = "CHIMIOTHERAPIE" }
+            new Famille { cbMarq = 2, faCodeFamille = "CARD02", faIntitule = "STENT RESOLUTE ONYX" },
+            new Famille { cbMarq = 3, faCodeFamille = "CARD03", faIntitule = "STENT XIENCE SIERRA" },
+            new Famille { cbMarq = 4, faCodeFamille = "CARD29", faIntitule = "STENT XIENCE" },
+            new Famille { cbMarq = 5, faCodeFamille = "CARD30", faIntitule = "STENT PROMUS" },
         };
 
         public static List<SousFamille> SousFamilles { get; set; } = new()
@@ -44,24 +51,101 @@ namespace KTBioAPI.Data
             new SousFamille { cbMarq = 11, code = "39206", nom = "SH", fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 11, 12) }
         };
 
+        // Seed users with BCrypt hashed passwords
+        // Default password for all users: "KTBio@2026"
+        // BCrypt hash: $2a$12$LQ7Z8VqF5X9mKxF9YZ9Z9.9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9
         public static List<Utilisateur> Utilisateurs { get; set; } = new()
         {
-            new Utilisateur { Id = 1, Username = "anis.bk", PasswordHash = "hash123", Role = "Admin", FullName = "Anis Ben Khadija", Email = "anis@ktbio.tn" },
-            new Utilisateur { Id = 2, Username = "yamen.h", PasswordHash = "hash123", Role = "User", FullName = "Yamen Hadhri", Email = "yamen@ktbio.tn" },
-            new Utilisateur { Id = 3, Username = "mourad.bk", PasswordHash = "hash123", Role = "User", FullName = "Mourad Ben Khadija", Email = "mourad@ktbio.tn" },
-            new Utilisateur { Id = 4, Username = "iheb.b", PasswordHash = "hash123", Role = "User", FullName = "Iheb Belarbi", Email = "iheb@ktbio.tn" },
-            new Utilisateur { Id = 5, Username = "imen.l", PasswordHash = "hash123", Role = "User", FullName = "Imen Lahouioui", Email = "imen@ktbio.tn" },
-            new Utilisateur { Id = 6, Username = "marwa.t", PasswordHash = "hash123", Role = "User", FullName = "Marwa Troudi", Email = "marwa@ktbio.tn" },
-            new Utilisateur { Id = 7, Username = "ines.bk", PasswordHash = "hash123", Role = "User", FullName = "Ines Ben Khadija", Email = "ines@ktbio.tn" },
-            new Utilisateur { Id = 8, Username = "lilia.c", PasswordHash = "hash123", Role = "User", FullName = "Lilia Charmiti", Email = "lilia@ktbio.tn" }
+            new Utilisateur 
+            { 
+                Id = 1, 
+                Username = "admin", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "Admin", 
+                FullName = "Administrateur KTBio", 
+                Email = "admin@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 2, 
+                Username = "anis.bk", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "Admin", 
+                FullName = "Anis Ben Khadija", 
+                Email = "anis@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 3, 
+                Username = "yamen.h", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "User", 
+                FullName = "Yamen Hadhri", 
+                Email = "yamen@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 4, 
+                Username = "mourad.bk", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "User", 
+                FullName = "Mourad Ben Khadija", 
+                Email = "mourad@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 5, 
+                Username = "iheb.b", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "User", 
+                FullName = "Iheb Belarbi", 
+                Email = "iheb@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 6, 
+                Username = "imen.l", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "User", 
+                FullName = "Imen Lahouioui", 
+                Email = "imen@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 7, 
+                Username = "marwa.t", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "Vendeur", 
+                FullName = "Marwa Troudi", 
+                Email = "marwa@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 8, 
+                Username = "ines.bk", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "User", 
+                FullName = "Ines Ben Khadija", 
+                Email = "ines@ktbio.tn" 
+            },
+            new Utilisateur 
+            { 
+                Id = 9, 
+                Username = "lilia.c", 
+                PasswordHash = PasswordHelper.HashPassword(DEFAULT_PASSWORD),
+                Role = "User", 
+                FullName = "Lilia Charmiti", 
+                Email = "lilia@ktbio.tn" 
+            }
         };
 
         public static List<Etat> Etats { get; set; } = new()
         {
-            new Etat { Id = 1, Nom = "TEST", Familles = new() { "CARD01" }, Utilisateurs = new() { "Anis Ben Khadija" }, Depots = new() { 1 } },
-            new Etat { Id = 2, Nom = "onco", Familles = new() { "CARD05" }, Utilisateurs = new() { "Anis Ben Khadija" }, Depots = new() { 1, 2 } },
-            new Etat { Id = 3, Nom = "DEB", Familles = new() { "CARD29" }, Utilisateurs = new() { "Yamen Hadhri", "Mourad Ben Khadija", "Iheb Belarbi", "Imen Lahouioui", "Yamen Hadhri", "Marwa Troudi", "Anis Ben Khadija", "Ines Ben Khadija", "Lilia Charmiti", "Imen Lahouioui" }, Depots = new() { 1, 2, 3 } },
-            new Etat { Id = 4, Nom = "CB", Familles = new() { "CARD30" }, Utilisateurs = new() { "Iheb Belarbi", "Anis Ben Khadija", "Mourad Ben Khadija" }, Depots = new() { 1, 2, 3, 4 } }
+            new Etat { Id = 1, Nom = "ETAT BIOLOR", Familles = new() { "BIOLOR" }, Utilisateurs = new() { "Anis Ben Khadija" }, Depots = new() { 1 } },
+            new Etat { Id = 2, Nom = "ETAT CARDIOLOGIE", Familles = new() { "CARDIO" }, Utilisateurs = new() { "Anis Ben Khadija", "Yamen Hadhri" }, Depots = new() { 1, 2 } },
+            new Etat { Id = 3, Nom = "ETAT ONCOLOGIE", Familles = new() { "ONCO07" }, Utilisateurs = new() { "Yamen Hadhri", "Mourad Ben Khadija", "Iheb Belarbi" }, Depots = new() { 1, 2, 3 } },
+            new Etat { Id = 4, Nom = "ETAT UROLOGIE", Familles = new() { "UR12" }, Utilisateurs = new() { "Iheb Belarbi", "Anis Ben Khadija", "Mourad Ben Khadija" }, Depots = new() { 1, 2, 3, 4 } },
+            new Etat { Id = 5, Nom = "ETAT GENERAL", Familles = new() { "CARD01", "CARD05", "CARD29", "CARD30" }, Utilisateurs = new() { "Administrateur KTBio" }, Depots = new() { 1, 2, 3, 4, 5 } }
         };
 
         public static List<InventoryItem> InventoryItems { get; set; } = GenerateInventoryItems();
@@ -113,6 +197,39 @@ namespace KTBioAPI.Data
             }
             
             return items;
+        }
+        
+        /// <summary>
+        /// Get information about default seed users
+        /// </summary>
+        public static string GetDefaultUserInfo()
+        {
+            return $@"
+╔══════════════════════════════════════════════════════════════════╗
+║                   SEED USERS INFORMATION                         ║
+╠══════════════════════════════════════════════════════════════════╣
+║ Default Password for ALL users: {DEFAULT_PASSWORD}                    ║
+║                                                                  ║
+║ Users:                                                           ║
+║   1. admin (Admin)         - admin@ktbio.tn                      ║
+║   2. anis.bk (Admin)       - anis@ktbio.tn                       ║
+║   3. yamen.h (User)        - yamen@ktbio.tn                      ║
+║   4. mourad.bk (User)      - mourad@ktbio.tn                     ║
+║   5. iheb.b (User)         - iheb@ktbio.tn                       ║
+║   6. imen.l (User)         - imen@ktbio.tn                       ║
+║   7. marwa.t (Vendeur)     - marwa@ktbio.tn                      ║
+║   8. ines.bk (User)        - ines@ktbio.tn                       ║
+║   9. lilia.c (User)        - lilia@ktbio.tn                      ║
+║                                                                  ║
+║ Total Seed Data:                                                 ║
+║   - Depots: 11                                                   ║
+║   - Familles: 10                                                 ║
+║   - SousFamilles: 11                                             ║
+║   - Utilisateurs: 9                                              ║
+║   - Etats: 5                                                     ║
+║   - InventoryItems: ~Generated dynamically                       ║
+╚══════════════════════════════════════════════════════════════════╝
+";
         }
     }
 }

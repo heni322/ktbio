@@ -5,89 +5,92 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KTBioAPI.Controllers
 {
+    /// <summary>
+    /// Familles — lecture depuis dbo.F_FAMILLE (Sage) avec filtre :
+    ///   SELECT FA_CodeFamille, FA_Intitule
+    ///   FROM dbo.F_FAMILLE
+    ///   WHERE FA_CodeFamille IN ('CARD01','CARD02','CARD03','CARD29','CARD30')
+    ///
+    /// La table App_Familles n'est plus utilisée.
+    /// POST /Sync  → synchronise App_Familles depuis Sage (Admin uniquement, appelé au démarrage).
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class FamilleController : ControllerBase
     {
-        private readonly KTBioAPI.Data.KTBioContext _context;
+        // Codes autorisés — modifier ici pour en ajouter/retirer
+        private static readonly string[] AllowedCodes =
+            { "CARD01", "CARD02", "CARD03", "CARD29", "CARD30" };
+
+        private readonly KTBioContext _context;
         private readonly bool _useMockData;
 
-        public FamilleController(KTBioAPI.Data.KTBioContext context, IConfiguration configuration)
+        public FamilleController(KTBioContext context, IConfiguration configuration)
         {
-            _context = context;
+            _context   = context;
             _useMockData = configuration.GetValue<bool>("ConnectionStrings:UseMockData");
         }
 
+        // ── GET api/Famille ──────────────────────────────────────────────────
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Famille>>> GetAll()
         {
             if (_useMockData)
-            {
                 return Ok(MockData.Familles);
-            }
 
+            // SELECT FA_CodeFamille, FA_Intitule FROM dbo.F_FAMILLE
+            // WHERE FA_CodeFamille IN ('CARD01','CARD02','CARD03','CARD29','CARD30')
             var familles = await _context.FFamilles
+                .Where(f => AllowedCodes.Contains(f.FaCodeFamille.Trim()))
+                .OrderBy(f => f.FaCodeFamille)
                 .Select(f => new Famille
                 {
-                    cbMarq = f.CbMarq,
+                    cbMarq        = f.CbMarq,
                     faCodeFamille = f.FaCodeFamille.Trim(),
-                    faIntitule = f.FaIntitule.Trim()
+                    faIntitule    = f.FaIntitule.Trim()
                 })
                 .ToListAsync();
+
             return Ok(familles);
         }
 
+        // ── GET api/Famille/{code} ───────────────────────────────────────────
         [HttpGet("{code}")]
         public async Task<ActionResult<Famille>> GetByCode(string code)
         {
-            var f = await _context.FFamilles.FirstOrDefaultAsync(f => f.FaCodeFamille == code);
-            if (f == null)
-                return NotFound();
-            
+            if (_useMockData)
+            {
+                var mock = MockData.Familles.FirstOrDefault(f => f.faCodeFamille == code);
+                return mock is null ? NotFound() : Ok(mock);
+            }
+
+            if (!AllowedCodes.Contains(code.Trim().ToUpper()))
+                return NotFound(new { error = "Famille non autorisée ou non trouvée." });
+
+            var f = await _context.FFamilles
+                .FirstOrDefaultAsync(f => f.FaCodeFamille.Trim() == code.Trim());
+
+            if (f is null)
+                return NotFound(new { error = "Famille non trouvée dans Sage." });
+
             return Ok(new Famille
             {
-                cbMarq = f.CbMarq,
-                faCodeFamille = f.FaCodeFamille,
-                faIntitule = f.FaIntitule
+                cbMarq        = f.CbMarq,
+                faCodeFamille = f.FaCodeFamille.Trim(),
+                faIntitule    = f.FaIntitule.Trim()
             });
         }
 
-        [HttpPost]
-        public IActionResult Create([FromBody] Famille famille)
+        // ── DELETE api/Famille/DeleteAll ─────────────────────────────────────
+        // Vide la table App_Familles (utilisée uniquement si UseMockData=true)
+        [HttpDelete("DeleteAll")]
+        public IActionResult DeleteAll()
         {
-            if (_useMockData)
-            {
-                famille.cbMarq = MockData.Familles.Any() ? MockData.Familles.Max(f => f.cbMarq) + 1 : 1;
-                MockData.Familles.Add(famille);
-                return CreatedAtAction(nameof(GetByCode), new { code = famille.faCodeFamille }, famille);
-            }
-            return StatusCode(501, "Creation not supported on real database via this API yet.");
-        }
+            if (!_useMockData)
+                return BadRequest(new { error = "App_Familles n'est pas utilisée en mode SQL — aucune action nécessaire." });
 
-        [HttpPut("{code}")]
-        public IActionResult Update(string code, [FromBody] Famille famille)
-        {
-            if (_useMockData)
-            {
-                var existing = MockData.Familles.FirstOrDefault(f => f.faCodeFamille == code);
-                if (existing == null) return NotFound();
-                existing.faIntitule = famille.faIntitule;
-                return Ok(existing);
-            }
-            return StatusCode(501, "Update not supported on real database via this API yet.");
-        }
-
-        [HttpDelete("{code}")]
-        public IActionResult Delete(string code)
-        {
-            if (_useMockData)
-            {
-                var existing = MockData.Familles.FirstOrDefault(f => f.faCodeFamille == code);
-                if (existing == null) return NotFound();
-                MockData.Familles.Remove(existing);
-                return NoContent();
-            }
-            return StatusCode(501, "Delete not supported on real database via this API yet.");
+            MockData.Familles.Clear();
+            return Ok(new { message = "Toutes les familles mock ont été supprimées." });
         }
     }
 }
