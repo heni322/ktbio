@@ -57,8 +57,8 @@ interface ArticleStockRow {
   arDesign: string;
   faCodeFamille: string;
   arRefSuffixe: string;
-  longueur: number | null;      // ← from backend SQL
-  diametre: number | null;      // ← from backend SQL
+  longueur: number | null;
+  diametre: number | null;
   total: number;
   depots: ArticleDepotDetail[];
 }
@@ -101,6 +101,41 @@ function formatDate(d: string | null): string {
   if (!d) return '—';
   const dt = new Date(d);
   return `${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
+}
+
+// ── Warning icon (yellow triangle with !) ─────────────────────────────────────
+function WarningIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 100 88"
+      width={size}
+      height={size}
+      xmlns="http://www.w3.org/2000/svg"
+      className="drop-shadow-sm flex-shrink-0"
+    >
+      <defs>
+        <linearGradient id="triGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%"   stopColor="#FDE047" />
+          <stop offset="100%" stopColor="#F59E0B" />
+        </linearGradient>
+      </defs>
+      <polygon
+        points="50,5 97,83 3,83"
+        fill="url(#triGrad)"
+        stroke="#92400E"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <text
+        x="50" y="74"
+        textAnchor="middle"
+        fontSize="54"
+        fontWeight="900"
+        fill="#1C1917"
+        fontFamily="Arial, sans-serif"
+      >!</text>
+    </svg>
+  );
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -257,7 +292,6 @@ export function ArticleStockTable() {
   const handleFamille  = (v: string) => { setFamille(v); setPage(1); };
   const handlePageSize = (s: number) => { setPageSize(s); setPage(1); };
 
-  // Accumulate famille codes from pages visited
   useEffect(() => {
     if (resp && famille === 'tout') {
       setFamilleCodes(prev => {
@@ -342,7 +376,6 @@ export function ArticleStockTable() {
     );
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="h-full flex flex-col bg-gray-50">
 
@@ -443,6 +476,19 @@ export function ArticleStockTable() {
             ))}
           </div>
         )}
+
+        {/* Quantité legend */}
+        {viewMode === 'Quantité' && (
+          <div className="px-4 pb-2 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mr-1">Légende :</span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-500 text-white">
+              Qté normale
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-400 text-gray-900">
+              <WarningIcon size={12} /> Stock = 1 (critique)
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Stats ── */}
@@ -462,27 +508,21 @@ export function ArticleStockTable() {
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="bg-gradient-to-r from-teal-600 to-teal-500 text-white sticky top-0 z-30">
-              {/* Longueur – sticky col 0 */}
               <th className="px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide sticky left-0 z-40 bg-teal-600 border-r border-white/10 min-w-[80px]">
                 Longueur
               </th>
-              {/* Diamètre – sticky col 1 */}
               <th className="px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide sticky left-[80px] z-40 bg-teal-600 border-r border-white/10 min-w-[80px]">
                 Diamètre
               </th>
-              {/* Référence – sticky col 2 */}
               <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide sticky left-[160px] z-40 bg-teal-600 border-r border-white/10 min-w-[130px]">
                 Référence
               </th>
-              {/* Désignation – sticky col 3 */}
               <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide sticky left-[290px] z-40 bg-teal-600 border-r border-white/10 min-w-[200px]">
                 Désignation
               </th>
-              {/* Consulter */}
               <th className="px-2 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide bg-teal-600 border-r border-white/10 min-w-[90px]">
                 Consulter
               </th>
-              {/* Depot columns */}
               {depots.map(dep => (
                 <th key={dep.deNo} className="px-2 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide bg-teal-600 border-r border-white/10 min-w-[130px] leading-tight">
                   {dep.deIntitule}
@@ -513,8 +553,6 @@ export function ArticleStockTable() {
             ) : articles.map((art, idx) => {
               const even = idx % 2 === 0;
               const base = even ? 'bg-white' : 'bg-slate-50/60';
-
-              // Detect longueur group boundary for visual separator
               const prevArt = idx > 0 ? articles[idx - 1] : null;
               const isNewLongueur = !prevArt || prevArt.longueur !== art.longueur;
 
@@ -523,7 +561,7 @@ export function ArticleStockTable() {
                   className={`border-b border-gray-100 transition-colors group ${base} hover:bg-teal-50/30
                     ${isNewLongueur && idx > 0 ? 'border-t-2 border-t-teal-200/60' : ''}`}>
 
-                  {/* ── Longueur (rowspan: group all same-longueur rows) ── */}
+                  {/* Longueur – rowspan group */}
                   {isNewLongueur ? (() => {
                     const groupCount = articles.slice(idx).findIndex(a => a.longueur !== art.longueur);
                     const span = groupCount === -1 ? articles.length - idx : groupCount;
@@ -535,21 +573,21 @@ export function ArticleStockTable() {
                     );
                   })() : null}
 
-                  {/* ── Diamètre ── */}
+                  {/* Diamètre */}
                   <td className={`px-3 py-2.5 text-center font-semibold sticky left-[80px] z-20 border-r border-gray-100 min-w-[80px] ${base} group-hover:bg-teal-50/30`}>
                     {art.diametre != null
                       ? <span className="text-teal-600 text-sm">{art.diametre.toFixed(1)}</span>
                       : <span className="text-gray-200">—</span>}
                   </td>
 
-                  {/* ── Référence ── */}
+                  {/* Référence */}
                   <td className={`px-3 py-2.5 sticky left-[160px] z-20 border-r border-gray-100 min-w-[130px] ${base} group-hover:bg-teal-50/30`}>
                     <span className="font-mono text-[11px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                       {art.arRef}
                     </span>
                   </td>
 
-                  {/* ── Désignation + famille ── */}
+                  {/* Désignation + famille */}
                   <td className={`px-3 py-2.5 sticky left-[290px] z-20 border-r border-gray-100 min-w-[200px] ${base} group-hover:bg-teal-50/30`}>
                     <p className="font-medium text-gray-800 text-sm leading-tight">{art.arDesign}</p>
                     <span className="mt-0.5 inline-block text-[10px] font-medium text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded-full">
@@ -557,42 +595,57 @@ export function ArticleStockTable() {
                     </span>
                   </td>
 
-                  {/* ── Consulter button ── */}
+                  {/* Consulter */}
                   <td className="px-2 py-2.5 text-center border-r border-gray-100 min-w-[90px]">
                     <button
                       title={`Consulter l'inventaire de ${art.faCodeFamille}`}
-                      onClick={() =>
-                        navigate('/inventory', {
-                          state: {
-                            filterEtat: {
-                              id: 0,
-                              nom: `Famille ${art.faCodeFamille}`,
-                              familles: [art.faCodeFamille],
-                              utilisateurs: [],
-                              depots: [],
-                            },
+                      onClick={() => navigate('/inventory', {
+                        state: {
+                          filterEtat: {
+                            id: 0,
+                            nom: `Famille ${art.faCodeFamille}`,
+                            familles: [art.faCodeFamille],
+                            utilisateurs: [],
+                            depots: [],
                           },
-                        })
-                      }
+                        },
+                      })}
                       className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-teal-50 border border-teal-200
                                  text-teal-700 text-[11px] font-semibold hover:bg-teal-100 hover:border-teal-400
-                                 transition-all active:scale-95 shadow-sm"
-                    >
+                                 transition-all active:scale-95 shadow-sm">
                       <Eye className="h-3 w-3" />
                       État
                     </button>
                   </td>
 
-                  {/* ── Per-depot lots ── */}
+                  {/* Per-depot */}
                   {depots.map(dep => {
                     const depData = art.depots.find(d => d.depotId === dep.deNo);
 
                     if (viewMode === 'Quantité') {
+                      const qty = depData?.totalQte ?? 0;
                       return (
-                        <td key={dep.deNo} className="px-2 py-2.5 border-r border-gray-100 text-center min-w-[130px]">
-                          {depData?.totalQte
-                            ? <span className="inline-flex items-center justify-center h-7 min-w-[2.5rem] px-2 rounded-lg bg-teal-500 text-white text-sm font-bold shadow-sm shadow-teal-200">{depData.totalQte}</span>
-                            : <span className="text-gray-200">—</span>}
+                        <td key={dep.deNo} className="px-2 py-2 border-r border-gray-100 text-center min-w-[130px]">
+                          {qty > 0 ? (
+                            <div className="inline-flex flex-col items-center gap-1">
+                              {/* Quantity badge — amber when qty === 1, teal otherwise */}
+                              <span className={`inline-flex items-center justify-center h-7 min-w-[2.5rem] px-2 rounded-lg text-sm font-bold shadow-sm transition-colors
+                                ${qty === 1
+                                  ? 'bg-amber-400 text-gray-900 shadow-amber-200'
+                                  : 'bg-teal-500  text-white      shadow-teal-200'}`}>
+                                {qty}
+                              </span>
+                              {/* Warning icon only when qty === 1 */}
+                              {qty === 1 && (
+                                <div className="flex items-center gap-0.5" title="Dernière unité en stock — réapprovisionner">
+                                  <WarningIcon size={15} />
+                                  <span className="text-[9px] font-bold text-amber-700 leading-none">Critique</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-200">—</span>
+                          )}
                         </td>
                       );
                     }
@@ -647,7 +700,7 @@ export function ArticleStockTable() {
                     );
                   })}
 
-                  {/* ── Row total ── */}
+                  {/* Row total */}
                   <td className="px-3 py-2.5 text-center min-w-[80px]">
                     <span className="inline-flex items-center justify-center h-7 min-w-[2.5rem] px-2 bg-teal-600 text-white text-sm font-bold rounded-lg shadow-sm shadow-teal-300">
                       {art.total}
