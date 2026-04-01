@@ -53,41 +53,43 @@ namespace KTBioAPI.Controllers
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // SQL: mirrors the user-provided query exactly, fully parameterised.
-        //
-        //   SELECT a.AR_Ref, a.AR_Design, a.AR_SuiviStock,
-        //          ast.DE_No, d.DE_Intitule,
-        //          s.LS_Qte, s.LS_QteRestant, s.LS_NoSerie, s.LS_Peremption,
-        //          a.FA_CodeFamille, a.AR_Stat01, a.AR_Stat02
-        //   FROM F_ARTICLE a
-        //   INNER JOIN F_ARTSTOCK  ast ON a.AR_Ref = ast.AR_Ref
-        //   INNER JOIN F_LOTSERIE  s   ON a.AR_Ref = s.AR_Ref
-        //                              AND s.DE_No = ast.DE_No          ← same depot in both tables
-        //   INNER JOIN F_DEPOT     d   ON ast.DE_No = d.DE_No
-        //   WHERE s.LS_QteRestant > 0
-        //     [AND a.FA_CodeFamille IN (@fam0, @fam1, ...)]
-        //     [AND d.DE_No          IN (@dep0, @dep1, ...)]
+        // Core SQL — fully parameterised.
+        // Filters applied:
+        //   - LS_QteRestant > 0                        (always)
+        //   - FA_CodeFamille IN (...)                   (optional)
+        //   - d.DE_No IN (...)                          (optional)
+        //   - CodeSousFamille derived from AR_Ref = X   (optional)
         // ─────────────────────────────────────────────────────────────────────
         private async Task<List<InventoryFlatItem>> FetchFlatItemsAsync(InventoryFilterRequest request)
         {
             var parameters = new List<SqlParameter>();
 
+            // CodeSousFamille is derived in SQL with the same logic as the reference query:
+            //   CASE WHEN CHARINDEX('-', AR_Ref) > 0
+            //        THEN LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1)
+            //        ELSE RTRIM(AR_Ref)
+            //   END
             var sql = @"
                 SELECT
-                    s.cbMarq                        AS Id,
-                    RTRIM(a.AR_Ref)                 AS ArRef,
-                    ISNULL(a.AR_Design, '')          AS ArDesign,
-                    a.AR_SuiviStock                 AS ArSuiviStock,
-                    ast.DE_No                       AS DeNo,
-                    ISNULL(d.DE_Intitule, '')        AS DeIntitule,
-                    s.LS_Qte                        AS LsQte,
-                    s.LS_QteRestant                 AS LsQteRestant,
-                    ISNULL(s.LS_NoSerie, '')         AS LsNoSerie,
-                    s.LS_Peremption                 AS LsPeremption,
-                    RTRIM(ISNULL(a.FA_CodeFamille,'')) AS FaCodeFamille,
-                    ISNULL(a.AR_Stat01, '')          AS ArStat01,
-                    ISNULL(a.AR_Stat02, '')          AS ArStat02
-                FROM dbo.F_ARTICLE a
+                    s.cbMarq                                                        AS Id,
+                    RTRIM(a.AR_Ref)                                                 AS ArRef,
+                    ISNULL(a.AR_Design, '')                                         AS ArDesign,
+                    a.AR_SuiviStock                                                 AS ArSuiviStock,
+                    ast.DE_No                                                       AS DeNo,
+                    ISNULL(d.DE_Intitule, '')                                       AS DeIntitule,
+                    s.LS_Qte                                                        AS LsQte,
+                    s.LS_QteRestant                                                 AS LsQteRestant,
+                    ISNULL(s.LS_NoSerie, '')                                        AS LsNoSerie,
+                    s.LS_Peremption                                                 AS LsPeremption,
+                    RTRIM(ISNULL(a.FA_CodeFamille,''))                              AS FaCodeFamille,
+                    ISNULL(a.AR_Stat01, '')                                         AS ArStat01,
+                    ISNULL(a.AR_Stat02, '')                                         AS ArStat02,
+                    CASE
+                        WHEN CHARINDEX('-', RTRIM(a.AR_Ref)) > 0
+                        THEN LEFT(RTRIM(a.AR_Ref), CHARINDEX('-', RTRIM(a.AR_Ref)) - 1)
+                        ELSE RTRIM(a.AR_Ref)
+                    END                                                             AS CodeSousFamille
+                FROM dbo.F_ARTICLE  a
                 INNER JOIN dbo.F_ARTSTOCK ast ON RTRIM(a.AR_Ref) = RTRIM(ast.AR_Ref)
                 INNER JOIN dbo.F_LOTSERIE s   ON RTRIM(a.AR_Ref) = RTRIM(s.AR_Ref)
                                               AND s.DE_No = ast.DE_No
@@ -95,7 +97,7 @@ namespace KTBioAPI.Controllers
                 WHERE s.LS_QteRestant > 0";
 
             // ── Famille filter ──────────────────────────────────────────────
-            if (request.Familles != null && request.Familles.Count > 0)
+            if (request.Familles?.Count > 0)
             {
                 var pNames = request.Familles.Select((_, i) => $"@fam{i}").ToList();
                 sql += $" AND RTRIM(a.FA_CodeFamille) IN ({string.Join(",", pNames)})";
@@ -106,7 +108,7 @@ namespace KTBioAPI.Controllers
             }
 
             // ── Depot filter ────────────────────────────────────────────────
-            if (request.Depots != null && request.Depots.Count > 0)
+            if (request.Depots?.Count > 0)
             {
                 var pNames = request.Depots.Select((_, i) => $"@dep{i}").ToList();
                 sql += $" AND d.DE_No IN ({string.Join(",", pNames)})";
@@ -114,6 +116,24 @@ namespace KTBioAPI.Controllers
                     parameters.Add(new SqlParameter($"@dep{i}", request.Depots[i]));
 
                 Console.WriteLine($"[Inventory] Depot filter: {string.Join(", ", request.Depots)}");
+            }
+
+            // ── Sous-famille code filter ─────────────────────────────────────
+            // Matches articles whose AR_Ref prefix (before the first '-') equals the
+            // requested code, e.g. CodeSousFamille = "39113" matches "39113-1225",
+            // "39113-0826", and plain "39113".
+            // Note: SQL Server cannot reference a SELECT alias in the same WHERE clause,
+            // so the CASE expression is repeated here.
+            if (!string.IsNullOrWhiteSpace(request.CodeSousFamille))
+            {
+                sql += @"
+                    AND CASE
+                            WHEN CHARINDEX('-', RTRIM(a.AR_Ref)) > 0
+                            THEN LEFT(RTRIM(a.AR_Ref), CHARINDEX('-', RTRIM(a.AR_Ref)) - 1)
+                            ELSE RTRIM(a.AR_Ref)
+                        END = @codeSousFamille";
+                parameters.Add(new SqlParameter("@codeSousFamille", request.CodeSousFamille.Trim()));
+                Console.WriteLine($"[Inventory] CodeSousFamille filter: {request.CodeSousFamille.Trim()}");
             }
 
             var list = new List<InventoryFlatItem>();
@@ -132,26 +152,27 @@ namespace KTBioAPI.Controllers
             {
                 list.Add(new InventoryFlatItem
                 {
-                    Id            = Convert.ToInt32(reader["Id"]),
-                    ArRef         = reader["ArRef"]?.ToString()?.Trim()         ?? "",
-                    ArDesign      = reader["ArDesign"]?.ToString()?.Trim()      ?? "",
-                    ArSuiviStock  = reader["ArSuiviStock"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ArSuiviStock"]),
-                    DeNo          = reader["DeNo"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DeNo"]),
-                    DeIntitule    = reader["DeIntitule"]?.ToString()?.Trim()    ?? "",
-                    LsQte         = reader["LsQte"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["LsQte"]),
-                    LsQteRestant  = reader["LsQteRestant"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["LsQteRestant"]),
-                    LsNoSerie     = reader["LsNoSerie"]?.ToString()?.Trim()     ?? "",
-                    LsPeremption  = reader["LsPeremption"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["LsPeremption"]),
-                    FaCodeFamille = reader["FaCodeFamille"]?.ToString()?.Trim() ?? "",
-                    ArStat01      = reader["ArStat01"]?.ToString()?.Trim()      ?? "",
-                    ArStat02      = reader["ArStat02"]?.ToString()?.Trim()      ?? "",
+                    Id              = Convert.ToInt32(reader["Id"]),
+                    ArRef           = reader["ArRef"]?.ToString()?.Trim()           ?? "",
+                    ArDesign        = reader["ArDesign"]?.ToString()?.Trim()        ?? "",
+                    ArSuiviStock    = reader["ArSuiviStock"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ArSuiviStock"]),
+                    DeNo            = reader["DeNo"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DeNo"]),
+                    DeIntitule      = reader["DeIntitule"]?.ToString()?.Trim()      ?? "",
+                    LsQte           = reader["LsQte"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["LsQte"]),
+                    LsQteRestant    = reader["LsQteRestant"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["LsQteRestant"]),
+                    LsNoSerie       = reader["LsNoSerie"]?.ToString()?.Trim()       ?? "",
+                    LsPeremption    = reader["LsPeremption"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["LsPeremption"]),
+                    FaCodeFamille   = reader["FaCodeFamille"]?.ToString()?.Trim()   ?? "",
+                    ArStat01        = reader["ArStat01"]?.ToString()?.Trim()        ?? "",
+                    ArStat02        = reader["ArStat02"]?.ToString()?.Trim()        ?? "",
+                    CodeSousFamille = reader["CodeSousFamille"]?.ToString()?.Trim() ?? "",
                 });
             }
 
             return list;
         }
 
-        // ── Grouping (depot name now comes directly from the query row) ──────
+        // ── Grouping ──────────────────────────────────────────────────────────
         private static List<InventoryGroupView> BuildGrouped(
             List<InventoryFlatItem> list,
             DateTime today)
@@ -162,7 +183,6 @@ namespace KTBioAPI.Controllers
                 decimal longu = ParseDimension(x.ArStat02);
                 string  name  = CleanString(x.ArDesign);
 
-                // Fallback: extract dimensions from article designation if not in Stat fields
                 if ((diam == 0 || longu == 0) && !string.IsNullOrEmpty(name))
                 {
                     var matches = System.Text.RegularExpressions.Regex
@@ -188,13 +208,11 @@ namespace KTBioAPI.Controllers
                         .Select(dg => new DepotInventory
                         {
                             DepotId   = dg.Key.DeNo,
-                            // Depot name comes from the SQL join — no separate lookup needed
                             DepotName = dg.Key.DeIntitule,
                             Items = dg
                                 .GroupBy(x => new
                                 {
                                     x.Name,
-                                    // Group lots by month/year of expiry (UI granularity)
                                     ExpiryMonth = x.Item.LsPeremption.HasValue
                                         ? new DateTime(x.Item.LsPeremption.Value.Year,
                                                        x.Item.LsPeremption.Value.Month, 1)
@@ -238,17 +256,31 @@ namespace KTBioAPI.Controllers
                 .ToList();
         }
 
-        // ── Mock data path (unchanged logic) ─────────────────────────────────
+        // ── Mock data path ────────────────────────────────────────────────────
         private static List<InventoryGroupView> BuildMockGrouped(InventoryFilterRequest request)
         {
             var mockItems = MockData.InventoryItems.AsEnumerable();
 
-            if (request.Familles != null && request.Familles.Count > 0)
+            if (request.Familles?.Count > 0)
                 mockItems = mockItems.Where(i => request.Familles.Contains(i.CodeFamille));
 
-            if (request.Depots != null && request.Depots.Count > 0)
+            if (request.Depots?.Count > 0)
                 mockItems = mockItems.Where(i => request.Depots.Contains(i.DepotId));
 
+            // CodeSousFamille: match the prefix extracted from ReferenceArticle
+            // (mirrors the DB CASE/CHARINDEX logic exactly)
+            if (!string.IsNullOrWhiteSpace(request.CodeSousFamille))
+            {
+                var code = request.CodeSousFamille.Trim();
+                mockItems = mockItems.Where(i =>
+                {
+                    var dash   = i.ReferenceArticle.IndexOf('-');
+                    var prefix = dash > 0 ? i.ReferenceArticle[..dash] : i.ReferenceArticle;
+                    return string.Equals(prefix, code, StringComparison.OrdinalIgnoreCase);
+                });
+            }
+
+            // Legacy name-based filter kept for backward compatibility
             if (!string.IsNullOrEmpty(request.SousFamille))
                 mockItems = mockItems.Where(i => i.SousFamille == request.SousFamille);
 
@@ -301,7 +333,7 @@ namespace KTBioAPI.Controllers
                 .ToList();
         }
 
-        // ── Utilities ────────────────────────────────────────────────────────
+        // ── Utilities ─────────────────────────────────────────────────────────
 
         private static decimal ParseDimension(string? input)
         {
@@ -322,7 +354,7 @@ namespace KTBioAPI.Controllers
                 .ToUpper();
         }
 
-        // ── Other endpoints ──────────────────────────────────────────────────
+        // ── Other endpoints ───────────────────────────────────────────────────
 
         [HttpGet("sousfamilles")]
         public async Task<ActionResult<IEnumerable<string>>> GetSousFamilles()
@@ -408,21 +440,27 @@ namespace KTBioAPI.Controllers
         }
     }
 
-    // ── Flat row DTO ─────────────────────────────────────────────────────────
+    // ── Flat row DTO ──────────────────────────────────────────────────────────
     public class InventoryFlatItem
     {
-        public int       Id            { get; set; }
-        public string    ArRef         { get; set; } = "";
-        public string    ArDesign      { get; set; } = "";
-        public int       ArSuiviStock  { get; set; }   // from F_ARTICLE.AR_SuiviStock
-        public int       DeNo          { get; set; }   // from F_ARTSTOCK (depot with actual stock)
-        public string    DeIntitule    { get; set; } = ""; // from F_DEPOT join
-        public decimal   LsQte         { get; set; }   // original lot quantity
-        public decimal   LsQteRestant  { get; set; }   // remaining quantity (used for calculations)
-        public string    LsNoSerie     { get; set; } = "";
-        public DateTime? LsPeremption  { get; set; }
-        public string    FaCodeFamille { get; set; } = "";
-        public string    ArStat01      { get; set; } = "";
-        public string    ArStat02      { get; set; } = "";
+        public int       Id              { get; set; }
+        public string    ArRef           { get; set; } = "";
+        public string    ArDesign        { get; set; } = "";
+        public int       ArSuiviStock    { get; set; }
+        public int       DeNo            { get; set; }
+        public string    DeIntitule      { get; set; } = "";
+        public decimal   LsQte           { get; set; }
+        public decimal   LsQteRestant    { get; set; }
+        public string    LsNoSerie       { get; set; } = "";
+        public DateTime? LsPeremption    { get; set; }
+        public string    FaCodeFamille   { get; set; } = "";
+        public string    ArStat01        { get; set; } = "";
+        public string    ArStat02        { get; set; } = "";
+
+        /// <summary>
+        /// LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1) — computed by SQL.
+        /// e.g. "39113" from "39113-1225".
+        /// </summary>
+        public string    CodeSousFamille { get; set; } = "";
     }
 }

@@ -6,27 +6,35 @@ namespace KTBioAPI.Models
     {
         [Key]
         public int Id { get; set; }
-        public string CodeFamille { get; set; } = string.Empty;
-        public string ReferenceArticle { get; set; } = string.Empty;
-        public string Designation { get; set; } = string.Empty;
-        public string SousFamille { get; set; } = string.Empty;
-        public decimal Longueur { get; set; }
-        public decimal Diametre { get; set; }
-        public int DepotId { get; set; }
-        public string DepotName { get; set; } = string.Empty;
-        public int Quantite { get; set; }
+        public string CodeFamille       { get; set; } = string.Empty;
+        public string ReferenceArticle  { get; set; } = string.Empty;
+        public string Designation       { get; set; } = string.Empty;
+        public string SousFamille       { get; set; } = string.Empty;
+        public decimal Longueur         { get; set; }
+        public decimal Diametre         { get; set; }
+        public int DepotId              { get; set; }
+        public string DepotName         { get; set; } = string.Empty;
+        public int Quantite             { get; set; }
         public DateTime? DateExpiration { get; set; }
-        public string? Lot { get; set; }
+        public string? Lot              { get; set; }
         public int CriticalPeriodMonths { get; set; }
     }
 
     public class InventoryFilterRequest
     {
-        public string? Annee { get; set; }
-        public string? SousFamille { get; set; }
-        public List<string>? Familles { get; set; }
-        public List<int>? Depots { get; set; }
-        public string? ModeAffichage { get; set; } = "Date";
+        public string? Annee            { get; set; }
+        public string? SousFamille      { get; set; }
+
+        /// <summary>
+        /// Filters articles by the sous-famille code derived from AR_Ref:
+        /// LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1)
+        /// e.g. "39113" matches "39113-1225", "39113-0826", and plain "39113".
+        /// </summary>
+        public string? CodeSousFamille  { get; set; }
+
+        public List<string>? Familles   { get; set; }
+        public List<int>?    Depots     { get; set; }
+        public string? ModeAffichage    { get; set; } = "Date";
     }
 
     public class InventoryGroupView
@@ -39,18 +47,18 @@ namespace KTBioAPI.Models
 
     public class DepotInventory
     {
-        public int DepotId { get; set; }
+        public int    DepotId   { get; set; }
         public string DepotName { get; set; } = string.Empty;
         public List<InventoryDetail> Items { get; set; } = new();
     }
 
     public class InventoryDetail
     {
-        public int Id { get; set; }
-        public string SousFamille { get; set; } = string.Empty;
-        public int Quantite { get; set; }
-        public DateTime? DateExpiration { get; set; }
-        public string? Lot { get; set; }
-        public int CriticalPeriodMonths { get; set; }
+        public int       Id                   { get; set; }
+        public string    SousFamille          { get; set; } = string.Empty;
+        public int       Quantite             { get; set; }
+        public DateTime? DateExpiration       { get; set; }
+        public string?   Lot                  { get; set; }
+        public int       CriticalPeriodMonths { get; set; }
     }
 }

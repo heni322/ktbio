@@ -24,22 +24,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/**
- * Parse a .NET ProblemDetails / ValidationProblemDetails error response and
- * return a human-readable string (or array of strings).
- *
- * Handles:
- *  - { errors: { field: ["msg", ...], ... } }  → ASP.NET ModelState errors
- *  - { message: "..." }                         → custom API error
- *  - { title: "..." }                           → generic ProblemDetails
- */
 export function parseApiError(error: unknown): string {
   if (!axios.isAxiosError(error)) return 'Une erreur inattendue est survenue';
 
   const data = error.response?.data;
   if (!data) return error.message || 'Erreur réseau';
 
-  // ASP.NET ValidationProblemDetails: { errors: { field: ["msg"] } }
   if (data.errors && typeof data.errors === 'object') {
     const messages = Object.values(data.errors as Record<string, string[]>)
       .flat()
@@ -47,22 +37,18 @@ export function parseApiError(error: unknown): string {
     if (messages.length) return messages.join('\n');
   }
 
-  // Custom API error message
   if (typeof data.message === 'string' && data.message) return data.message;
-
-  // Generic ProblemDetails title
   if (typeof data.title === 'string' && data.title) return data.title;
 
   return `Erreur ${error.response?.status ?? ''}`;
 }
 
-// ─── Response interceptor: global toast on API errors + auto-refresh ────────
+// ─── Response interceptor ────────────────────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Auto-refresh on 401 (only once, skip login/refresh endpoints)
     if (
       axios.isAxiosError(error) &&
       error.response?.status === 401 &&
@@ -81,7 +67,6 @@ api.interceptors.response.use(
           originalRequest.headers['Authorization'] = `Bearer ${token}`;
           return api(originalRequest);
         } catch {
-          // Refresh failed — clear auth and redirect to login
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
@@ -89,7 +74,6 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
       } else {
-        // No refresh token stored — redirect to login
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -97,14 +81,11 @@ api.interceptors.response.use(
       }
     }
 
-    // Skip 401 that already went through refresh — no toast
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       return Promise.reject(error);
     }
 
     const message = parseApiError(error);
-
-    // Show each line as its own toast so multi-field errors are readable
     message.split('\n').forEach((line) => {
       if (line.trim()) toast.error(line.trim());
     });
@@ -161,9 +142,10 @@ export const inventoryApi = {
   filter: (filters: {
     annee?: string;
     sousFamille?: string;
+    codeSousFamille?: string; // AR_Ref prefix filter: LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1)
     familles?: string[];
     depots?: number[];
-    modeAffichage?: string
+    modeAffichage?: string;
   }) => api.post<InventoryGroupView[]>('/Inventory/filter', filters),
   getSousFamilles: () => api.get<string[]>('/Inventory/sousfamilles'),
   getAnnees: () => api.get<number[]>('/Inventory/annees'),

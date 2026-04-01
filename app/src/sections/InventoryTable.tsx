@@ -22,55 +22,39 @@ interface InventoryTableProps {
 
 type ViewMode = 'Date' | 'Quantité' | 'Lot';
 
-// ── Warning triangle icon (yellow/black) ─────────────────────────────────────
+// ── Warning triangle icon ─────────────────────────────────────────────────────
 function WarningIcon({ size = 16 }: { size?: number }) {
   return (
-    <svg
-      viewBox="0 0 100 88"
-      width={size}
-      height={size}
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-sm flex-shrink-0"
-    >
+    <svg viewBox="0 0 100 88" width={size} height={size} xmlns="http://www.w3.org/2000/svg" className="drop-shadow-sm flex-shrink-0">
       <defs>
         <linearGradient id="invTriGrad" x1="50%" y1="0%" x2="50%" y2="100%">
           <stop offset="0%"   stopColor="#FDE047" />
           <stop offset="100%" stopColor="#F59E0B" />
         </linearGradient>
       </defs>
-      <polygon
-        points="50,5 97,83 3,83"
-        fill="url(#invTriGrad)"
-        stroke="#92400E"
-        strokeWidth="3"
-        strokeLinejoin="round"
-      />
-      <text
-        x="50" y="74"
-        textAnchor="middle"
-        fontSize="54"
-        fontWeight="900"
-        fill="#1C1917"
-        fontFamily="Arial, sans-serif"
-      >!</text>
+      <polygon points="50,5 97,83 3,83" fill="url(#invTriGrad)" stroke="#92400E" strokeWidth="3" strokeLinejoin="round" />
+      <text x="50" y="74" textAnchor="middle" fontSize="54" fontWeight="900" fill="#1C1917" fontFamily="Arial, sans-serif">!</text>
     </svg>
   );
 }
 
 export function InventoryTable({ inventory: initialInventory, depots, allSousFamilles }: InventoryTableProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const filterEtat = location.state?.filterEtat as Etat | undefined;
+  const navigate    = useNavigate();
+  const location    = useLocation();
+  const filterEtat  = location.state?.filterEtat as Etat | undefined;
 
+  // ── Data state ───────────────────────────────────────────────────────────
   const [inventory, setInventory] = useState(initialInventory);
-  const [anneeFilter, setAnneeFilter] = useState<string>('tout');
+
+  // ── UI filters ───────────────────────────────────────────────────────────
+  const [anneeFilter, setAnneeFilter]             = useState<string>('tout');
   const [sousFamilleFilter, setSousFamilleFilter] = useState<string>('tout');
-  const [viewMode, setViewMode] = useState<ViewMode>('Date');
+  const [viewMode, setViewMode]                   = useState<ViewMode>('Date');
 
-  useEffect(() => {
-    setInventory(initialInventory);
-  }, [initialInventory]);
+  // Sync when parent re-fetches (e.g. etat filter changes)
+  useEffect(() => { setInventory(initialInventory); }, [initialInventory]);
 
+  // ── Derived ───────────────────────────────────────────────────────────────
   const sousFamillesNames = useMemo(() => allSousFamilles.map(sf => sf.nom), [allSousFamilles]);
 
   const displayedDepots = useMemo(() => {
@@ -83,22 +67,20 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
     inventory.forEach(item => {
       item.depots.forEach(depot => {
         depot.items.forEach(detail => {
-          if (detail.dateExpiration) {
-            years.add(new Date(detail.dateExpiration).getFullYear());
-          }
+          if (detail.dateExpiration) years.add(new Date(detail.dateExpiration).getFullYear());
         });
       });
     });
     return Array.from(years).sort();
   }, [inventory]);
 
+  // Client-side filters: année + sousFamille
   const filteredInventory = useMemo(() => {
     return inventory
       .map(item => {
         const filteredItemDepots = item.depots.filter(d =>
           displayedDepots.some(dd => dd.deNo === d.depotId)
         );
-
         const updatedDepots = filteredItemDepots.map(d => ({
           ...d,
           items: d.items.filter(detail => {
@@ -111,16 +93,15 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
             return matchesSousFamille && matchesAnnee;
           }),
         }));
-
         const total = updatedDepots.reduce(
-          (sum, d) => sum + d.items.reduce((iSum, i) => iSum + i.quantite, 0),
-          0
+          (sum, d) => sum + d.items.reduce((iSum, i) => iSum + i.quantite, 0), 0
         );
         return { ...item, depots: updatedDepots, total };
       })
       .filter(item => item.total > 0);
   }, [inventory, anneeFilter, sousFamilleFilter, displayedDepots]);
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const updateLocalQuantity = (id: number, delta: number) => {
     setInventory(prev =>
       prev.map(group => ({
@@ -128,9 +109,7 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
         depots: group.depots.map(depot => ({
           ...depot,
           items: depot.items.map(item =>
-            item.id === id
-              ? { ...item, quantite: Math.max(0, item.quantite + delta) }
-              : item
+            item.id === id ? { ...item, quantite: Math.max(0, item.quantite + delta) } : item
           ),
         })),
       }))
@@ -148,26 +127,18 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
   const handleExportExcel = () => {
     const headers = ['Longueur', 'Diamètre', ...displayedDepots.map(d => d.deIntitule), 'Total'];
     const data = filteredInventory.map(item => {
-      const row: Record<string, unknown> = {
-        Longueur: item.longueur,
-        Diamètre: item.diametre,
-      };
+      const row: Record<string, unknown> = { Longueur: item.longueur, Diamètre: item.diametre };
       displayedDepots.forEach(depot => {
         const depotData = item.depots.find(d => d.depotId === depot.deNo);
         if (depotData && depotData.items.length > 0) {
-          row[depot.deIntitule] = depotData.items
-            .map(detail => {
-              if (viewMode === 'Quantité') return detail.quantite;
-              if (viewMode === 'Lot') return detail.lot || '-';
-              const dateStr = detail.dateExpiration
-                ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                  })
-                : '-';
-              return `${detail.sousFamille}: ${dateStr} (${detail.quantite})`;
-            })
-            .join(' | ');
+          row[depot.deIntitule] = depotData.items.map(detail => {
+            if (viewMode === 'Quantité') return detail.quantite;
+            if (viewMode === 'Lot') return detail.lot || '-';
+            const dateStr = detail.dateExpiration
+              ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' })
+              : '-';
+            return `${detail.sousFamille}: ${dateStr} (${detail.quantite})`;
+          }).join(' | ');
         } else {
           row[depot.deIntitule] = '-';
         }
@@ -175,20 +146,22 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
       row['Total'] = item.total;
       return row;
     });
-
     const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
-    const workbook = XLSX.utils.book_new();
+    const workbook  = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventaire');
     const date = new Date().toISOString().split('T')[0];
-    const fileName = `Inventaire_${filterEtat ? filterEtat.nom + '_' : ''}${date}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+    XLSX.writeFile(workbook, `Inventaire_${filterEtat ? filterEtat.nom + '_' : ''}${date}.xlsx`);
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="h-full flex flex-col bg-white">
+
       {/* ── Top bar ── */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
+
+          {/* Left: back + active filter badge */}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="text-[#3CBAAE]" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4 mr-1" />
@@ -201,33 +174,34 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
+          {/* Right: controls */}
+          <div className="flex flex-wrap items-center gap-3">
+
+            {/* Année */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Année:</span>
               <Select value={anneeFilter} onValueChange={setAnneeFilter}>
                 <SelectTrigger className="w-[120px]"><SelectValue placeholder="Toutes" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tout">Toutes</SelectItem>
-                  {annees.map(year => (
-                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                  ))}
+                  {annees.map(year => <SelectItem key={year} value={year.toString()}>{year}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Sous Famille */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Sous Famille:</span>
               <Select value={sousFamilleFilter} onValueChange={setSousFamilleFilter}>
                 <SelectTrigger className="w-[180px]"><SelectValue placeholder="Toutes" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tout">Toutes</SelectItem>
-                  {sousFamillesNames.map(sf => (
-                    <SelectItem key={sf} value={sf}>{sf}</SelectItem>
-                  ))}
+                  {sousFamillesNames.map(sf => <SelectItem key={sf} value={sf}>{sf}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Affichage */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Affichage:</span>
               <Select value={viewMode} onValueChange={v => setViewMode(v as ViewMode)}>
@@ -269,7 +243,7 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
       )}
 
       {/* ── Excel button ── */}
-      <div className="px-4 py-2 bg-white">
+      <div className="px-4 py-2 bg-white border-b border-gray-100">
         <Button className="bg-[#3CBAAE] hover:bg-[#35a89d]" onClick={handleExportExcel}>
           <FileSpreadsheet className="h-4 w-4 mr-2" />
           Excel
@@ -277,7 +251,8 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
       </div>
 
       {/* ── Table ── */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto relative">
+
         {filteredInventory.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2 py-24">
             <svg className="h-12 w-12 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -300,10 +275,8 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                   Diamètre
                 </th>
                 {displayedDepots.map(depot => (
-                  <th
-                    key={depot.deNo}
-                    className="px-2 py-2 text-center font-semibold text-[11px] leading-tight break-words min-w-[100px] bg-[#3CBAAE] border-r border-white/10 uppercase tracking-tight"
-                  >
+                  <th key={depot.deNo}
+                    className="px-2 py-2 text-center font-semibold text-[11px] leading-tight break-words min-w-[100px] bg-[#3CBAAE] border-r border-white/10 uppercase tracking-tight">
                     {depot.deIntitule}
                   </th>
                 ))}
@@ -322,23 +295,21 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                       isNewLength && idx > 0 ? 'border-t-2 border-t-[#3CBAAE]/30' : ''
                     }`}
                   >
+                    {/* Longueur – rowspan */}
                     {isNewLength && (
                       <td
-                        className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] align-middle border-r border-[#3CBAAE]/30 border-b border-[#3CBAAE]/5 sticky left-0 z-20 w-24 text-sm shadow-[1px_0_0_0_rgba(60,186,174,0.1)]"
+                        className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] align-middle border-r border-[#3CBAAE]/30 sticky left-0 z-20 w-24 text-sm"
                         rowSpan={
-                          filteredInventory.slice(idx).findIndex(
-                            nextItem => nextItem.longueur !== item.longueur
-                          ) === -1
+                          filteredInventory.slice(idx).findIndex(n => n.longueur !== item.longueur) === -1
                             ? filteredInventory.length - idx
-                            : filteredInventory
-                                .slice(idx)
-                                .findIndex(nextItem => nextItem.longueur !== item.longueur)
+                            : filteredInventory.slice(idx).findIndex(n => n.longueur !== item.longueur)
                         }
                       >
                         {item.longueur > 0 ? item.longueur : '-'}
                       </td>
                     )}
 
+                    {/* Diamètre */}
                     <td className="px-3 py-1.5 font-bold text-[#3CBAAE] bg-[#f0fdfc] sticky left-24 z-20 w-28 border-r border-[#3CBAAE]/10 text-sm relative">
                       {idx > 0 && item.longueur === filteredInventory[idx - 1].longueur && (
                         <div className="absolute top-0 left-2 right-2 h-[1px] bg-gray-200/60" />
@@ -346,6 +317,7 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                       {item.diametre > 0 ? item.diametre.toFixed(2) : '-'}
                     </td>
 
+                    {/* Per-depot cells */}
                     {displayedDepots.map(displayDepot => {
                       const depotData = item.depots.find(d => d.depotId === displayDepot.deNo);
 
@@ -354,27 +326,16 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                           ? depotData.items.reduce((sum, i) => sum + i.quantite, 0)
                           : 0;
                         return (
-                          <td
-                            key={displayDepot.deNo}
-                            className="px-2 py-1.5 border-r border-gray-100 min-w-[100px] text-center"
-                          >
+                          <td key={displayDepot.deNo} className="px-2 py-1.5 border-r border-gray-100 min-w-[100px] text-center">
                             {totalQty > 0 ? (
                               <div className="inline-flex flex-col items-center gap-1">
-                                {/* Badge — amber when qty=1, teal otherwise */}
                                 <span className={`inline-flex items-center justify-center h-7 min-w-[2rem] px-2 rounded-lg text-sm font-bold shadow-sm transition-colors
-                                  ${totalQty === 1
-                                    ? 'bg-amber-400 text-gray-900 shadow-amber-200'
-                                    : 'bg-[#3CBAAE]  text-white      shadow-teal-200'}`}>
+                                  ${totalQty === 1 ? 'bg-amber-400 text-gray-900 shadow-amber-200' : 'bg-[#3CBAAE] text-white shadow-teal-200'}`}>
                                   {totalQty}
                                 </span>
-                                {/* Warning icon — only when qty = 1 */}
                                 {totalQty === 1 && (
-                                  <div
-                                    className="flex items-center gap-0.5"
-                                    title="Dernière unité en stock — réapprovisionner"
-                                  >
+                                  <div className="flex items-center gap-0.5" title="Dernière unité en stock — réapprovisionner">
                                     <WarningIcon size={15} />
-                                    {/* <span className="text-[9px] font-bold text-amber-700 leading-none">Critique</span> */}
                                   </div>
                                 )}
                               </div>
@@ -386,30 +347,22 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                       }
 
                       return (
-                        <td
-                          key={displayDepot.deNo}
-                          className="px-2 py-1.5 border-r border-gray-50 min-w-[100px]"
-                        >
+                        <td key={displayDepot.deNo} className="px-2 py-1.5 border-r border-gray-50 min-w-[100px]">
                           <div className="space-y-1">
                             {depotData && depotData.items.length > 0 ? (
                               depotData.items.map((detail, dIdx) => (
                                 <div key={dIdx}>
                                   {viewMode === 'Lot' ? (
-                                    <div className="text-center text-gray-900 font-medium">
-                                      {detail.lot || '-'}
+                                    <div className="text-center">
+                                      <span className="text-gray-900 font-medium text-sm">
+                                        {detail.lot || '-'}
+                                      </span>
                                     </div>
                                   ) : (
-                                    <div
-                                      className={`px-2 py-1 rounded text-center text-[11px] font-bold ${getCriticalClass(
-                                        detail.criticalPeriodMonths
-                                      )}`}
-                                    >
+                                    <div className={`px-2 py-1 rounded text-center text-[11px] font-bold ${getCriticalClass(detail.criticalPeriodMonths)}`}>
                                       {detail.sousFamille}:{' '}
                                       {detail.dateExpiration
-                                        ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', {
-                                            year: 'numeric',
-                                            month: '2-digit',
-                                          })
+                                        ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' })
                                         : '-'}
                                       ({detail.quantite})
                                     </div>
@@ -417,11 +370,9 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
 
                                   {viewMode === 'Date' && (
                                     <div className="flex items-center justify-center gap-2 mt-1 py-1 px-2 bg-white rounded border border-gray-200 shadow-sm h-7">
-                                      <button
-                                        className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-all active:scale-90"
+                                      <button className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-all active:scale-90"
                                         onClick={async e => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
+                                          e.preventDefault(); e.stopPropagation();
                                           if (detail.quantite > 0) {
                                             try {
                                               updateLocalQuantity(detail.id, -1);
@@ -429,39 +380,25 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                                               toast.success('Mis à jour');
                                             } catch (err: unknown) {
                                               updateLocalQuantity(detail.id, 1);
-                                              const msg =
-                                                (err as any)?.response?.data ||
-                                                (err as Error)?.message ||
-                                                'Erreur';
-                                              toast.error(`Erreur: ${msg}`);
+                                              toast.error(`Erreur: ${(err as any)?.response?.data || (err as Error)?.message || 'Erreur'}`);
                                             }
                                           }
-                                        }}
-                                      >
+                                        }}>
                                         <Minus className="h-3.5 w-3.5 stroke-[3px]" />
                                       </button>
-                                      <span className="text-xs font-bold text-gray-900 w-6 text-center tabular-nums">
-                                        {detail.quantite}
-                                      </span>
-                                      <button
-                                        className="text-green-500 hover:bg-green-50 p-1 rounded-full transition-all active:scale-90"
+                                      <span className="text-xs font-bold text-gray-900 w-6 text-center tabular-nums">{detail.quantite}</span>
+                                      <button className="text-green-500 hover:bg-green-50 p-1 rounded-full transition-all active:scale-90"
                                         onClick={async e => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
+                                          e.preventDefault(); e.stopPropagation();
                                           try {
                                             updateLocalQuantity(detail.id, 1);
                                             await inventoryApi.adjustQuantity(detail.id, 1);
                                             toast.success('Mis à jour');
                                           } catch (err: unknown) {
                                             updateLocalQuantity(detail.id, -1);
-                                            const msg =
-                                              (err as any)?.response?.data ||
-                                              (err as Error)?.message ||
-                                              'Erreur';
-                                            toast.error(`Erreur: ${msg}`);
+                                            toast.error(`Erreur: ${(err as any)?.response?.data || (err as Error)?.message || 'Erreur'}`);
                                           }
-                                        }}
-                                      >
+                                        }}>
                                         <Plus className="h-3.5 w-3.5 stroke-[3px]" />
                                       </button>
                                     </div>
@@ -478,6 +415,7 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                       );
                     })}
 
+                    {/* Total */}
                     <td className="px-3 py-1.5 text-center font-bold text-[#3CBAAE] bg-[#f0fdfc] border-l border-[#3CBAAE]/10 text-sm">
                       {item.total}
                     </td>
