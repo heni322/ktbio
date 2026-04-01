@@ -19,13 +19,6 @@ namespace KTBioAPI.Controllers
 
         // ─────────────────────────────────────────────────────────────────────
         // POST api/ArticleStock/filter
-        // Body: {
-        //   familles: ["CARD01",...],
-        //   depots:   [1, 2, ...],
-        //   search:   "ketamine",
-        //   page:     1,          ← 1-based
-        //   pageSize: 20
-        // }
         // ─────────────────────────────────────────────────────────────────────
         [HttpPost("filter")]
         public async Task<ActionResult<ArticleStockPagedResponse>> GetFiltered(
@@ -47,7 +40,7 @@ namespace KTBioAPI.Controllers
                 int pageSize = request.PageSize is > 0 and <= 500 ? request.PageSize : 20;
                 var today    = DateTime.Now;
 
-                // ── 1. Load depots (cheap, cached in practice) ──────────────
+                // ── 1. Depots ────────────────────────────────────────────────
                 var allDepots = await _context.FDepots.ToListAsync();
                 List<DepotInfo> depotList;
                 if (request.Depots != null && request.Depots.Any())
@@ -60,7 +53,7 @@ namespace KTBioAPI.Controllers
                         .Select(d => new DepotInfo { DeNo = d.DeNo ?? 0, DeIntitule = d.DeIntitule ?? "" })
                         .OrderBy(d => d.DeNo).ToList();
 
-                // ── 2. Build WHERE clauses (shared by count + data queries) ─
+                // ── 2. WHERE clauses ─────────────────────────────────────────
                 var whereClauses = new List<string> { "ls.LS_QteRestant > 0" };
 
                 if (request.Familles != null && request.Familles.Any())
@@ -75,11 +68,9 @@ namespace KTBioAPI.Controllers
 
                 if (!string.IsNullOrWhiteSpace(request.Search))
                 {
-                    // Sanitise: allow only safe characters to avoid injection
                     var safe = new string(request.Search
                         .Where(c => char.IsLetterOrDigit(c) || c == ' ' || c == '-' || c == '_' || c == '.')
                         .ToArray()).Trim();
-
                     if (!string.IsNullOrEmpty(safe))
                         whereClauses.Add(
                             $"(RTRIM(a.AR_Design) LIKE '%{safe}%' OR RTRIM(a.AR_Ref) LIKE '%{safe}%')");
@@ -87,7 +78,7 @@ namespace KTBioAPI.Controllers
 
                 var whereStr = "WHERE " + string.Join(" AND ", whereClauses);
 
-                // ── 3. Count DISTINCT articles that match ───────────────────
+                // ── 3. Count distinct articles ───────────────────────────────
                 string countSql = $@"
                     SELECT COUNT(DISTINCT a.AR_Ref)
                     FROM dbo.F_ARTICLE a
@@ -95,24 +86,57 @@ namespace KTBioAPI.Controllers
                     INNER JOIN dbo.F_LOTSERIE ls ON a.AR_Ref = ls.AR_Ref AND s.DE_No = ls.DE_No
                     {whereStr}";
 
-                int totalCount = 0;
-
-                // ── 4. Get the AR_Refs for this page (keyset/OFFSET) ────────
-                //   We ORDER articles by AR_Design then page with OFFSET / FETCH.
+                // ── 4. Page refs (OFFSET/FETCH) ──────────────────────────────
+                // We expose LONGUEUR and DIAMETRE here so the page-ref ORDER is consistent
+                // with how the table will be rendered (sorted by longueur, diametre, ref)
                 string pageRefsSql = $@"
-                    SELECT DISTINCT a.AR_Ref, RTRIM(a.AR_Design) AS AR_Design
+                    SELECT DISTINCT
+                        a.AR_Ref,
+                        RTRIM(a.AR_Design) AS AR_Design,
+                        RTRIM(a.FA_CodeFamille) AS FA_CodeFamille,
+                        -- AR_Ref suffix (normalised to 4 chars)
+                        CASE
+                            WHEN LEN(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 3
+                             AND ISNUMERIC(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 1
+                            THEN '0' + SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))
+                            ELSE SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))
+                        END AS AR_Ref_Suffixe,
+                        -- LONGUEUR
+                        CASE
+                            WHEN LEN(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 4
+                             AND ISNUMERIC(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 1
+                            THEN CAST(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, 2) AS INT)
+                            WHEN LEN(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 3
+                             AND ISNUMERIC(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 1
+                            THEN CAST(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, 1) AS INT)
+                            ELSE NULL
+                        END AS LONGUEUR,
+                        -- DIAMETRE
+                        CASE
+                            WHEN LEN(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 4
+                             AND ISNUMERIC(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 1
+                            THEN CAST(
+                                    SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 3, 1) + '.' +
+                                    SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 4, 1)
+                                 AS DECIMAL(5,1))
+                            WHEN LEN(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 3
+                             AND ISNUMERIC(SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 1, LEN(a.AR_Ref))) = 1
+                            THEN CAST(
+                                    SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 2, 1) + '.' +
+                                    SUBSTRING(a.AR_Ref, CHARINDEX('-', a.AR_Ref) + 3, 1)
+                                 AS DECIMAL(5,1))
+                            ELSE NULL
+                        END AS DIAMETRE
                     FROM dbo.F_ARTICLE a
                     INNER JOIN dbo.F_ARTSTOCK s  ON a.AR_Ref = s.AR_Ref
                     INNER JOIN dbo.F_LOTSERIE ls ON a.AR_Ref = ls.AR_Ref AND s.DE_No = ls.DE_No
                     {whereStr}
-                    ORDER BY AR_Design, a.AR_Ref
+                    ORDER BY LONGUEUR, DIAMETRE, a.AR_Ref
                     OFFSET {(page - 1) * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
 
-                var pageRefs = new List<(string ArRef, string ArDesign)>();
-
-                // ── 5. Fetch lot details only for those refs ─────────────────
-                //   (avoids loading the entire table)
-                var flat = new List<ArticleLotFlat>();
+                var pageRefs = new List<ArticleRefRow>();
+                var flat     = new List<ArticleLotFlat>();
+                int totalCount = 0;
 
                 await using var conn = _context.Database.GetDbConnection();
                 if (conn.State != System.Data.ConnectionState.Open)
@@ -126,23 +150,31 @@ namespace KTBioAPI.Controllers
                     totalCount = scalar == null || scalar == DBNull.Value ? 0 : Convert.ToInt32(scalar);
                 }
 
-                // Page refs
+                // Page refs + dimensions
                 await using (var cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = pageRefsSql;
                     await using var rdr = await cmd.ExecuteReaderAsync();
                     while (await rdr.ReadAsync())
-                        pageRefs.Add((rdr["AR_Ref"]?.ToString()?.Trim() ?? "",
-                                      rdr["AR_Design"]?.ToString()?.Trim() ?? ""));
+                    {
+                        pageRefs.Add(new ArticleRefRow
+                        {
+                            ArRef         = rdr["AR_Ref"]?.ToString()?.Trim()         ?? "",
+                            ArDesign      = rdr["AR_Design"]?.ToString()?.Trim()       ?? "",
+                            FaCodeFamille = rdr["FA_CodeFamille"]?.ToString()?.Trim()  ?? "",
+                            Longueur      = rdr["LONGUEUR"]      == DBNull.Value ? (int?)null    : Convert.ToInt32(rdr["LONGUEUR"]),
+                            Diametre      = rdr["DIAMETRE"]      == DBNull.Value ? (decimal?)null : Convert.ToDecimal(rdr["DIAMETRE"]),
+                            ArRefSuffixe  = rdr["AR_Ref_Suffixe"]?.ToString()?.Trim()  ?? "",
+                        });
+                    }
                 }
 
+                // Lot details for this page only
                 if (pageRefs.Count > 0)
                 {
-                    // Lot details for the page refs only
                     var refList = string.Join("','",
                         pageRefs.Select(r => r.ArRef.Replace("'", "''")));
 
-                    // Extra depot/famille filters still apply here for consistency
                     var lotWhere = new List<string>
                     {
                         $"a.AR_Ref IN ('{refList}')",
@@ -154,18 +186,16 @@ namespace KTBioAPI.Controllers
                     string detailSql = $@"
                         SELECT
                             a.AR_Ref,
-                            RTRIM(a.AR_Design)      AS AR_Design,
-                            RTRIM(a.FA_CodeFamille)  AS FA_CodeFamille,
                             s.DE_No,
                             ls.LS_QteRestant,
                             ls.LS_NoSerie,
                             ls.LS_Peremption,
-                            ls.cbMarq               AS LsId
+                            ls.cbMarq AS LsId
                         FROM dbo.F_ARTICLE a
                         INNER JOIN dbo.F_ARTSTOCK s  ON a.AR_Ref = s.AR_Ref
                         INNER JOIN dbo.F_LOTSERIE ls ON a.AR_Ref = ls.AR_Ref AND s.DE_No = ls.DE_No
                         WHERE {string.Join(" AND ", lotWhere)}
-                        ORDER BY a.AR_Design, ls.LS_Peremption";
+                        ORDER BY a.AR_Ref, ls.LS_Peremption";
 
                     await using var cmd = conn.CreateCommand();
                     cmd.CommandText = detailSql;
@@ -174,57 +204,54 @@ namespace KTBioAPI.Controllers
                     {
                         flat.Add(new ArticleLotFlat
                         {
-                            LsId          = rdr["LsId"]          == DBNull.Value ? 0  : Convert.ToInt32(rdr["LsId"]),
-                            ArRef         = rdr["AR_Ref"]?.ToString()?.Trim()         ?? "",
-                            ArDesign      = rdr["AR_Design"]?.ToString()?.Trim()      ?? "",
-                            FaCodeFamille = rdr["FA_CodeFamille"]?.ToString()?.Trim() ?? "",
-                            DeNo          = rdr["DE_No"]          == DBNull.Value ? 0  : Convert.ToInt32(rdr["DE_No"]),
-                            LsNoSerie     = rdr["LS_NoSerie"]?.ToString()?.Trim()     ?? "",
-                            LsPeremption  = rdr["LS_Peremption"]  == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(rdr["LS_Peremption"]),
-                            LsQteRestant  = rdr["LS_QteRestant"]  == DBNull.Value ? 0m : Convert.ToDecimal(rdr["LS_QteRestant"])
+                            LsId         = rdr["LsId"]         == DBNull.Value ? 0  : Convert.ToInt32(rdr["LsId"]),
+                            ArRef        = rdr["AR_Ref"]?.ToString()?.Trim()        ?? "",
+                            DeNo         = rdr["DE_No"]         == DBNull.Value ? 0  : Convert.ToInt32(rdr["DE_No"]),
+                            LsNoSerie    = rdr["LS_NoSerie"]?.ToString()?.Trim()    ?? "",
+                            LsPeremption = rdr["LS_Peremption"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(rdr["LS_Peremption"]),
+                            LsQteRestant = rdr["LS_QteRestant"] == DBNull.Value ? 0m : Convert.ToDecimal(rdr["LS_QteRestant"])
                         });
                     }
                 }
 
-                // ── 6. Group into ArticleStockRow objects ────────────────────
-                //   Preserve the ORDER we got from pageRefs.
+                // ── 5. Build response, preserving page order ─────────────────
                 var flatByRef = flat.GroupBy(x => x.ArRef).ToDictionary(g => g.Key);
 
-                var articles = pageRefs
-                    .Select(pr =>
-                    {
-                        var items = flatByRef.TryGetValue(pr.ArRef, out var g) ? g.ToList() : new List<ArticleLotFlat>();
-                        var famCode = items.FirstOrDefault()?.FaCodeFamille ?? "";
+                var articles = pageRefs.Select(pr =>
+                {
+                    var items = flatByRef.TryGetValue(pr.ArRef, out var g) ? g.ToList() : new List<ArticleLotFlat>();
 
-                        return new ArticleStockRow
+                    return new ArticleStockRow
+                    {
+                        ArRef         = pr.ArRef,
+                        ArDesign      = pr.ArDesign,
+                        FaCodeFamille = pr.FaCodeFamille,
+                        ArRefSuffixe  = pr.ArRefSuffixe,
+                        Longueur      = pr.Longueur,
+                        Diametre      = pr.Diametre,
+                        Total         = (int)items.Sum(x => x.LsQteRestant),
+                        Depots        = depotList.Select(dep =>
                         {
-                            ArRef         = pr.ArRef,
-                            ArDesign      = pr.ArDesign,
-                            FaCodeFamille = famCode,
-                            Total         = (int)items.Sum(x => x.LsQteRestant),
-                            Depots        = depotList.Select(dep =>
+                            var di = items.Where(x => x.DeNo == dep.DeNo).ToList();
+                            return new ArticleDepotDetail
                             {
-                                var di = items.Where(x => x.DeNo == dep.DeNo).ToList();
-                                return new ArticleDepotDetail
+                                DepotId   = dep.DeNo,
+                                DepotName = dep.DeIntitule,
+                                TotalQte  = (int)di.Sum(x => x.LsQteRestant),
+                                Lots      = di.Select(i => new ArticleLotDetail
                                 {
-                                    DepotId   = dep.DeNo,
-                                    DepotName = dep.DeIntitule,
-                                    TotalQte  = (int)di.Sum(x => x.LsQteRestant),
-                                    Lots      = di.Select(i => new ArticleLotDetail
-                                    {
-                                        Id                  = i.LsId,
-                                        Lot                 = i.LsNoSerie,
-                                        Quantite            = (int)i.LsQteRestant,
-                                        DateExpiration      = i.LsPeremption,
-                                        CriticalPeriodMonths = i.LsPeremption.HasValue
-                                            ? (int)((i.LsPeremption.Value - today).TotalDays / 30)
-                                            : 99
-                                    }).OrderBy(l => l.DateExpiration).ToList()
-                                };
-                            }).ToList()
-                        };
-                    })
-                    .ToList();
+                                    Id                   = i.LsId,
+                                    Lot                  = i.LsNoSerie,
+                                    Quantite             = (int)i.LsQteRestant,
+                                    DateExpiration       = i.LsPeremption,
+                                    CriticalPeriodMonths = i.LsPeremption.HasValue
+                                        ? (int)((i.LsPeremption.Value - today).TotalDays / 30)
+                                        : 99
+                                }).OrderBy(l => l.DateExpiration).ToList()
+                            };
+                        }).ToList()
+                    };
+                }).ToList();
 
                 return Ok(new ArticleStockPagedResponse
                 {
@@ -278,7 +305,7 @@ namespace KTBioAPI.Controllers
     {
         public List<string>? Familles { get; set; }
         public List<int>?    Depots   { get; set; }
-        public string?       Search   { get; set; }   // ← NEW: server-side search
+        public string?       Search   { get; set; }
         public int           Page     { get; set; } = 1;
         public int           PageSize { get; set; } = 20;
     }
@@ -300,10 +327,10 @@ namespace KTBioAPI.Controllers
 
     public class ArticleDepotDetail
     {
-        public int                  DepotId   { get; set; }
-        public string               DepotName { get; set; } = "";
-        public int                  TotalQte  { get; set; }
-        public List<ArticleLotDetail> Lots    { get; set; } = new();
+        public int                    DepotId   { get; set; }
+        public string                 DepotName { get; set; } = "";
+        public int                    TotalQte  { get; set; }
+        public List<ArticleLotDetail> Lots      { get; set; } = new();
     }
 
     public class ArticleStockRow
@@ -311,18 +338,19 @@ namespace KTBioAPI.Controllers
         public string                   ArRef         { get; set; } = "";
         public string                   ArDesign      { get; set; } = "";
         public string                   FaCodeFamille { get; set; } = "";
+        public string                   ArRefSuffixe  { get; set; } = "";   // ← NEW
+        public int?                     Longueur      { get; set; }         // ← NEW  e.g. 20
+        public decimal?                 Diametre      { get; set; }         // ← NEW  e.g. 3.5
         public int                      Total         { get; set; }
         public List<ArticleDepotDetail> Depots        { get; set; } = new();
     }
 
-    // Old response kept for backward compat (unused by updated frontend)
     public class ArticleStockResponse
     {
         public List<ArticleStockRow> Articles { get; set; } = new();
         public List<DepotInfo>       Depots   { get; set; } = new();
     }
 
-    // New paged response
     public class ArticleStockPagedResponse
     {
         public List<ArticleStockRow> Articles   { get; set; } = new();
@@ -332,15 +360,26 @@ namespace KTBioAPI.Controllers
         public int                   PageSize   { get; set; }
     }
 
+    // Internal helper for page-ref query result
+    internal class ArticleRefRow
+    {
+        public string   ArRef         { get; set; } = "";
+        public string   ArDesign      { get; set; } = "";
+        public string   FaCodeFamille { get; set; } = "";
+        public string   ArRefSuffixe  { get; set; } = "";
+        public int?     Longueur      { get; set; }
+        public decimal? Diametre      { get; set; }
+    }
+
     public class ArticleLotFlat
     {
-        public int       LsId          { get; set; }
-        public string    ArRef         { get; set; } = "";
-        public string    ArDesign      { get; set; } = "";
-        public string    FaCodeFamille { get; set; } = "";
-        public int       DeNo          { get; set; }
-        public string    LsNoSerie     { get; set; } = "";
-        public DateTime? LsPeremption  { get; set; }
-        public decimal   LsQteRestant  { get; set; }
+        public int       LsId         { get; set; }
+        public string    ArRef        { get; set; } = "";
+        public string    ArDesign     { get; set; } = "";
+        public string    FaCodeFamille{ get; set; } = "";
+        public int       DeNo         { get; set; }
+        public string    LsNoSerie    { get; set; } = "";
+        public DateTime? LsPeremption { get; set; }
+        public decimal   LsQteRestant { get; set; }
     }
 }
