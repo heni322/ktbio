@@ -639,7 +639,7 @@ export function ArticleStockTable() {
                               {qty === 1 && (
                                 <div className="flex items-center gap-0.5" title="Dernière unité en stock — réapprovisionner">
                                   <WarningIcon size={15} />
-                                  <span className="text-[9px] font-bold text-amber-700 leading-none">Critique</span>
+                                  {/* <span className="text-[9px] font-bold text-amber-700 leading-none">Critique</span> */}
                                 </div>
                               )}
                             </div>
