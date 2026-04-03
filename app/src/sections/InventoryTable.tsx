@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+﻿import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { ArrowLeft, FileSpreadsheet, Minus, Plus } from 'lucide-react';
@@ -18,6 +18,7 @@ interface InventoryTableProps {
   inventory: InventoryGroupView[];
   depots: Depot[];
   allSousFamilles: SousFamille[];
+  onSousFamilleChange?: (code: string) => void; // FIX: lifts filter to InventoryPage for SQL-level filtering
 }
 
 type ViewMode = 'Date' | 'Quantité' | 'Lot';
@@ -38,7 +39,7 @@ function WarningIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export function InventoryTable({ inventory: initialInventory, depots, allSousFamilles }: InventoryTableProps) {
+export function InventoryTable({ inventory: initialInventory, depots, allSousFamilles, onSousFamilleChange }: InventoryTableProps) {
   const navigate    = useNavigate();
   const location    = useLocation();
   const filterEtat  = location.state?.filterEtat as Etat | undefined;
@@ -52,10 +53,55 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
   const [viewMode, setViewMode]                   = useState<ViewMode>('Date');
 
   // Sync when parent re-fetches (e.g. etat filter changes)
-  useEffect(() => { setInventory(initialInventory); }, [initialInventory]);
+  useEffect(() => {
+    setInventory(initialInventory);
+    // Reset sous-famille filter when inventory source changes
+    setSousFamilleFilter('tout');
+    setAnneeFilter('tout');
+  }, [initialInventory]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const sousFamillesNames = useMemo(() => allSousFamilles.map(sf => sf.nom), [allSousFamilles]);
+
+  /**
+   * FIX: When a filterEtat is active, only show sous-familles whose
+   * fCodeFFamille belongs to one of the etat's famille codes.
+   * Without this, the dropdown lists ALL sous-familles from the DB,
+   * but the inventory data (filtered by the etat's familles on the server)
+   * only contains items from those specific familles — so selecting an
+   * unrelated sous-famille always yields 0 results.
+   */
+  const relevantSousFamilles = useMemo(() => {
+    if (!filterEtat || filterEtat.familles.length === 0) {
+      return allSousFamilles;
+    }
+    return allSousFamilles.filter(sf =>
+      filterEtat.familles.includes(sf.fCodeFFamille)
+    );
+  }, [allSousFamilles, filterEtat]);
+
+  /**
+   * FIX: Also derive sous-familles that actually appear in the current
+   * inventory data, so the dropdown never shows options that would produce
+   * empty results. We intersect relevantSousFamilles with whatever names
+   * actually exist in the loaded inventory rows.
+   */
+  const sousFamillesInInventory = useMemo(() => {
+    const namesInData = new Set<string>();
+    inventory.forEach(item => {
+      item.depots.forEach(depot => {
+        depot.items.forEach(detail => {
+          if (detail.sousFamille) namesInData.add(detail.sousFamille);
+        });
+      });
+    });
+    // Keep only sous-familles that are both relevant AND present in the data
+    return relevantSousFamilles.filter(sf => namesInData.has(sf.nom));
+  }, [relevantSousFamilles, inventory]);
+
+  const sousFamillesNames = useMemo(
+    () => sousFamillesInInventory.map(sf => sf.nom),
+    [sousFamillesInInventory]
+  );
 
   const displayedDepots = useMemo(() => {
     if (!filterEtat || filterEtat.depots.length === 0) return depots;
@@ -84,8 +130,8 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
         const updatedDepots = filteredItemDepots.map(d => ({
           ...d,
           items: d.items.filter(detail => {
-            const matchesSousFamille =
-              sousFamilleFilter === 'tout' || detail.sousFamille === sousFamilleFilter;
+            // FIX: sousFamille filtered server-side via SQL codeSousFamille param.
+            const matchesSousFamille = true;
             const matchesAnnee =
               anneeFilter === 'tout' ||
               (detail.dateExpiration &&
@@ -99,7 +145,7 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
         return { ...item, depots: updatedDepots, total };
       })
       .filter(item => item.total > 0);
-  }, [inventory, anneeFilter, sousFamilleFilter, displayedDepots]);
+  }, [inventory, anneeFilter, displayedDepots]); // sousFamilleFilter removed — now server-side
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const updateLocalQuantity = (id: number, delta: number) => {
@@ -189,10 +235,22 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
               </Select>
             </div>
 
-            {/* Sous Famille */}
+            {/* Sous Famille — now scoped to the active etat's familles */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Sous Famille:</span>
-              <Select value={sousFamilleFilter} onValueChange={setSousFamilleFilter}>
+              <Select
+                value={sousFamilleFilter}
+                onValueChange={(nom) => {
+                  setSousFamilleFilter(nom);
+                  // FIX: send the AR_Ref prefix CODE to backend SQL filter
+                  if (nom === 'tout') {
+                    onSousFamilleChange?.('');
+                  } else {
+                    const sf = allSousFamilles.find(s => s.nom === nom);
+                    onSousFamilleChange?.(sf?.code ?? nom);
+                  }
+                }}
+              >
                 <SelectTrigger className="w-[180px]"><SelectValue placeholder="Toutes" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="tout">Toutes</SelectItem>

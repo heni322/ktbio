@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from './sections/Header';
 import { Sidebar } from './sections/Sidebar';
@@ -383,7 +383,7 @@ function SousFamillesPage() {
   );
 }
 
-// ── FIXED: stable useEffect dependency + cancellation token ─────────────────
+// ── FIX: sous-famille filter lifted to page level → server-side SQL ──────────
 function InventoryPage() {
   const location = useLocation();
   const [inventory, setInventory] = useState<InventoryGroupView[]>([]);
@@ -391,12 +391,19 @@ function InventoryPage() {
   const [sousFamilles, setSousFamilles] = useState<SousFamille[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Derive a stable string key from the filter so useEffect only re-runs
-  // when the actual filter values change, not on every object re-creation.
+  // FIX: AR_Ref prefix code (e.g. '38940') sent to backend SQL
+  // SQL: LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1) = @codeSousFamille
+  const [sousFamilleCode, setSousFamilleCode] = useState('');
+
   const filterEtat = (location.state as any)?.filterEtat as Etat | undefined;
-  const filterKey = filterEtat
-    ? JSON.stringify({ id: filterEtat.id, familles: filterEtat.familles, depots: filterEtat.depots })
-    : 'none';
+
+  // FIX: include sousFamilleCode so re-fetch fires when user picks a sous-famille
+  const filterKey = JSON.stringify({
+    etat: filterEtat
+      ? { id: filterEtat.id, familles: filterEtat.familles, depots: filterEtat.depots }
+      : null,
+    sf: sousFamilleCode,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -404,9 +411,21 @@ function InventoryPage() {
     async function fetchData() {
       setLoading(true);
       try {
-        const filter = filterEtat
-          ? { familles: filterEtat.familles, depots: filterEtat.depots }
-          : {};
+        // FIX: build filter including codeSousFamille for SQL-level filtering
+        const filter: {
+          familles?: string[];
+          depots?: number[];
+          codeSousFamille?: string;
+        } = {};
+
+        if (filterEtat) {
+          filter.familles = filterEtat.familles;
+          filter.depots   = filterEtat.depots;
+        }
+        // SQL: LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1) = @codeSousFamille
+        if (sousFamilleCode) {
+          filter.codeSousFamille = sousFamilleCode;
+        }
 
         const [invRes, depRes, sfRes] = await Promise.all([
           inventoryApi.filter(filter),
@@ -427,7 +446,6 @@ function InventoryPage() {
     }
 
     fetchData();
-    // Cleanup: ignore stale results if component unmounts before request completes
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey]); // stable string — only re-fetches when filter actually changes
@@ -448,6 +466,7 @@ function InventoryPage() {
         inventory={inventory}
         depots={depots}
         allSousFamilles={sousFamilles}
+        onSousFamilleChange={(code) => setSousFamilleCode(code)}
       />
     </Layout>
   );

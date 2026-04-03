@@ -35,14 +35,20 @@ namespace KTBioAPI.Controllers
             try
             {
                 var today = DateTime.Now;
-                var list  = await FetchFlatItemsAsync(request);
+
+                // Load App_SousFamilles once — we need their nom to populate
+                // InventoryDetail.SousFamille correctly.
+                var sousFamillesLookup = await _context.SousFamilles
+                    .ToDictionaryAsync(s => s.code.Trim(), s => s.nom.Trim());
+
+                var list = await FetchFlatItemsAsync(request);
 
                 Console.WriteLine($"[Inventory] SQL returned {list.Count} rows for filter.");
 
                 if (list.Count == 0)
                     return Ok(new List<InventoryGroupView>());
 
-                var grouped = BuildGrouped(list, today);
+                var grouped = BuildGrouped(list, today, sousFamillesLookup);
                 return Ok(grouped);
             }
             catch (Exception ex)
@@ -173,9 +179,19 @@ namespace KTBioAPI.Controllers
         }
 
         // ── Grouping ──────────────────────────────────────────────────────────
+        //
+        // FIX: BuildGrouped now receives the App_SousFamilles lookup so it can
+        // correctly populate InventoryDetail.SousFamille with the human-readable
+        // "nom" from App_SousFamilles (keyed by CodeSousFamille = AR_Ref prefix).
+        //
+        // Previously SousFamille was set to `f.Name` (the article designation),
+        // which made the client-side "Sous Famille" dropdown filter completely
+        // broken — comparing a designation string against App_SousFamilles names
+        // always returned 0 matches.
         private static List<InventoryGroupView> BuildGrouped(
             List<InventoryFlatItem> list,
-            DateTime today)
+            DateTime today,
+            Dictionary<string, string> sousFamillesLookup)
         {
             var processed = list.Select(x =>
             {
@@ -196,7 +212,16 @@ namespace KTBioAPI.Controllers
                     }
                 }
 
-                return new { Item = x, Longueur = longu, Diametre = diam, Name = name };
+                // Resolve the human-readable sous-famille name from App_SousFamilles.
+                // CodeSousFamille = LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1)
+                // e.g. "39113" → App_SousFamilles lookup → "XD"
+                // Fall back to CodeSousFamille itself if no mapping is found.
+                string sfNom = !string.IsNullOrEmpty(x.CodeSousFamille) &&
+                               sousFamillesLookup.TryGetValue(x.CodeSousFamille, out var resolved)
+                    ? resolved
+                    : x.CodeSousFamille;
+
+                return new { Item = x, Longueur = longu, Diametre = diam, Name = name, SousFamilleNom = sfNom };
             }).ToList();
 
             return processed
@@ -212,7 +237,9 @@ namespace KTBioAPI.Controllers
                             Items = dg
                                 .GroupBy(x => new
                                 {
-                                    x.Name,
+                                    // FIX: group by the real sous-famille nom + expiry month,
+                                    // not by the article designation (Name).
+                                    SousFamille = x.SousFamilleNom,
                                     ExpiryMonth = x.Item.LsPeremption.HasValue
                                         ? new DateTime(x.Item.LsPeremption.Value.Year,
                                                        x.Item.LsPeremption.Value.Month, 1)
@@ -227,7 +254,8 @@ namespace KTBioAPI.Controllers
                                     return new InventoryDetail
                                     {
                                         Id                   = f.Item.Id,
-                                        SousFamille          = f.Name,
+                                        // FIX: use the resolved sous-famille nom, not f.Name
+                                        SousFamille          = f.SousFamilleNom,
                                         Quantite             = (int)ig.Sum(x => x.Item.LsQteRestant),
                                         DateExpiration       = f.Item.LsPeremption,
                                         Lot                  = string.IsNullOrEmpty(f.Item.LsNoSerie)
@@ -280,7 +308,7 @@ namespace KTBioAPI.Controllers
                 });
             }
 
-            // Legacy name-based filter kept for backward compatibility
+            // Legacy name-based filter — also support filtering by SousFamille.nom
             if (!string.IsNullOrEmpty(request.SousFamille))
                 mockItems = mockItems.Where(i => i.SousFamille == request.SousFamille);
 
@@ -301,7 +329,8 @@ namespace KTBioAPI.Controllers
                                 Items = g.Where(x => x.DepotId == dep.deNo)
                                     .GroupBy(x => new
                                     {
-                                        Name   = CleanString(x.SousFamille),
+                                        // Group by the actual SousFamille name + expiry month
+                                        SousFamille = x.SousFamille,
                                         Expiry = x.DateExpiration.HasValue
                                             ? new DateTime(x.DateExpiration.Value.Year,
                                                            x.DateExpiration.Value.Month, 1)

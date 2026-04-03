@@ -24,9 +24,7 @@ namespace KTBioAPI.Data
             new Depot { deNo = 11, deIntitule = "DR BEN AYED NABIL" }
         };
 
-        // Familles mock alignées sur les 5 codes autorisés :
-        // CARD01, CARD02, CARD03, CARD29, CARD30
-        // (identique au filtre SQL : WHERE FA_CodeFamille IN (...))
+        // Familles — codes are consistently used across Etats and SousFamilles below.
         public static List<Famille> Familles { get; set; } = new()
         {
             new Famille { cbMarq = 1, faCodeFamille = "CARD01", faIntitule = "STENT SYNERGY" },
@@ -36,24 +34,27 @@ namespace KTBioAPI.Data
             new Famille { cbMarq = 5, faCodeFamille = "CARD30", faIntitule = "STENT PROMUS" },
         };
 
+        // FIX: SousFamilles now use fCodeFFamille values that match the Famille codes
+        // above (CARD01, CARD02, CARD03, CARD29, CARD30).  Previously some entries used
+        // "ONCO05" and "CARD05" which don't exist in Familles, making those sous-familles
+        // invisible when filtering by any real Etat.
         public static List<SousFamille> SousFamilles { get; set; } = new()
         {
-            new SousFamille { cbMarq = 1, code = "381205", nom = "V5/5.5", fCodeFFamille = "ONCO05", dateCreation = new DateTime(2023, 1, 15) },
-            new SousFamille { cbMarq = 2, code = "381204", nom = "V4/4", fCodeFFamille = "ONCO05", dateCreation = new DateTime(2023, 2, 20) },
-            new SousFamille { cbMarq = 3, code = "39666", nom = "SH", fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 3, 10) },
-            new SousFamille { cbMarq = 4, code = "39222", nom = "Agent", fCodeFFamille = "CARD29", dateCreation = new DateTime(2023, 4, 5) },
-            new SousFamille { cbMarq = 5, code = "39200", nom = "PP", fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 5, 12) },
-            new SousFamille { cbMarq = 6, code = "39201", nom = "PE", fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 6, 8) },
-            new SousFamille { cbMarq = 7, code = "39202", nom = "S", fCodeFFamille = "CARD05", dateCreation = new DateTime(2023, 7, 15) },
-            new SousFamille { cbMarq = 8, code = "39203", nom = "SM", fCodeFFamille = "CARD05", dateCreation = new DateTime(2023, 8, 20) },
-            new SousFamille { cbMarq = 9, code = "39204", nom = "XD", fCodeFFamille = "CARD29", dateCreation = new DateTime(2023, 9, 10) },
-            new SousFamille { cbMarq = 10, code = "39205", nom = "PPs", fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 10, 5) },
-            new SousFamille { cbMarq = 11, code = "39206", nom = "SH", fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 11, 12) }
+            new SousFamille { cbMarq = 1,  code = "39666", nom = "SH",     fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 1, 15) },
+            new SousFamille { cbMarq = 2,  code = "39200", nom = "PP",     fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 2, 20) },
+            new SousFamille { cbMarq = 3,  code = "39201", nom = "PE",     fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 3, 10) },
+            new SousFamille { cbMarq = 4,  code = "39202", nom = "S",      fCodeFFamille = "CARD02", dateCreation = new DateTime(2023, 4, 5) },
+            new SousFamille { cbMarq = 5,  code = "39203", nom = "SM",     fCodeFFamille = "CARD02", dateCreation = new DateTime(2023, 5, 12) },
+            new SousFamille { cbMarq = 6,  code = "39204", nom = "XD",     fCodeFFamille = "CARD29", dateCreation = new DateTime(2023, 6, 8) },
+            new SousFamille { cbMarq = 7,  code = "39222", nom = "Agent",  fCodeFFamille = "CARD29", dateCreation = new DateTime(2023, 7, 15) },
+            new SousFamille { cbMarq = 8,  code = "39205", nom = "PPs",    fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 8, 20) },
+            new SousFamille { cbMarq = 9,  code = "39206", nom = "SH",     fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 9, 10) },
+            new SousFamille { cbMarq = 10, code = "39300", nom = "XSierra",fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 10, 5) },
+            new SousFamille { cbMarq = 11, code = "39301", nom = "Promus", fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 11, 12) },
         };
 
         // Seed users with BCrypt hashed passwords
         // Default password for all users: "KTBio@2026"
-        // BCrypt hash: $2a$12$LQ7Z8VqF5X9mKxF9YZ9Z9.9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9
         public static List<Utilisateur> Utilisateurs { get; set; } = new()
         {
             new Utilisateur 
@@ -139,13 +140,16 @@ namespace KTBioAPI.Data
             }
         };
 
+        // FIX: Etat famille codes now match real Famille.faCodeFamille values so that:
+        //  1. inventoryApi.filter({ familles: [...] }) actually returns rows
+        //  2. The Sous Famille dropdown on the frontend is correctly scoped
         public static List<Etat> Etats { get; set; } = new()
         {
-            new Etat { Id = 1, Nom = "ETAT BIOLOR", Familles = new() { "BIOLOR" }, Utilisateurs = new() { "Anis Ben Khadija" }, Depots = new() { 1 } },
-            new Etat { Id = 2, Nom = "ETAT CARDIOLOGIE", Familles = new() { "CARDIO" }, Utilisateurs = new() { "Anis Ben Khadija", "Yamen Hadhri" }, Depots = new() { 1, 2 } },
-            new Etat { Id = 3, Nom = "ETAT ONCOLOGIE", Familles = new() { "ONCO07" }, Utilisateurs = new() { "Yamen Hadhri", "Mourad Ben Khadija", "Iheb Belarbi" }, Depots = new() { 1, 2, 3 } },
-            new Etat { Id = 4, Nom = "ETAT UROLOGIE", Familles = new() { "UR12" }, Utilisateurs = new() { "Iheb Belarbi", "Anis Ben Khadija", "Mourad Ben Khadija" }, Depots = new() { 1, 2, 3, 4 } },
-            new Etat { Id = 5, Nom = "ETAT GENERAL", Familles = new() { "CARD01", "CARD05", "CARD29", "CARD30" }, Utilisateurs = new() { "Administrateur KTBio" }, Depots = new() { 1, 2, 3, 4, 5 } }
+            new Etat { Id = 1, Nom = "ETAT SYNERGY",     Familles = new() { "CARD01" },                            Utilisateurs = new() { "Anis Ben Khadija" },                                         Depots = new() { 1 } },
+            new Etat { Id = 2, Nom = "ETAT CARDIOLOGIE",  Familles = new() { "CARD01", "CARD02" },                  Utilisateurs = new() { "Anis Ben Khadija", "Yamen Hadhri" },                         Depots = new() { 1, 2 } },
+            new Etat { Id = 3, Nom = "ETAT XIENCE",       Familles = new() { "CARD03", "CARD29" },                  Utilisateurs = new() { "Yamen Hadhri", "Mourad Ben Khadija", "Iheb Belarbi" },      Depots = new() { 1, 2, 3 } },
+            new Etat { Id = 4, Nom = "ETAT PROMUS",       Familles = new() { "CARD30" },                            Utilisateurs = new() { "Iheb Belarbi", "Anis Ben Khadija", "Mourad Ben Khadija" },  Depots = new() { 1, 2, 3, 4 } },
+            new Etat { Id = 5, Nom = "ETAT GENERAL",      Familles = new() { "CARD01", "CARD02", "CARD03", "CARD29", "CARD30" }, Utilisateurs = new() { "Administrateur KTBio" },                       Depots = new() { 1, 2, 3, 4, 5 } }
         };
 
         public static List<InventoryItem> InventoryItems { get; set; } = GenerateInventoryItems();
@@ -154,43 +158,82 @@ namespace KTBioAPI.Data
         {
             var items = new List<InventoryItem>();
             var random = new Random(42);
-            var sousFamilles = new[] { "XD", "SH", "PP", "PE", "S", "SM", "PPs" };
+
+            // Map famille codes → their sous-famille names for realistic mock data
+            var familleSousFamilles = new Dictionary<string, string[]>
+            {
+                ["CARD01"] = new[] { "SH", "PP", "PE" },
+                ["CARD02"] = new[] { "S", "SM" },
+                ["CARD03"] = new[] { "XSierra", "Promus" },
+                ["CARD29"] = new[] { "XD", "Agent" },
+                ["CARD30"] = new[] { "PPs", "SH" },
+            };
+
             var longueurs = new[] { 12m, 8m, 15m, 18m, 20m, 22m, 25m, 28m, 30m, 38m };
             var diametres = new[] { 2.25m, 2.50m, 2.75m, 3.00m, 3.50m, 4.00m, 4.50m, 5.00m, 5.50m, 6.00m };
             
             int id = 1;
-            
-            foreach (var longueur in longueurs)
+
+            // Generate items for each famille so all Etats have matching inventory
+            var familleDesignations = new Dictionary<string, string>
             {
-                foreach (var diametre in diametres)
+                ["CARD01"] = "STENT SYNERGY",
+                ["CARD02"] = "STENT RESOLUTE ONYX",
+                ["CARD03"] = "STENT XIENCE SIERRA",
+                ["CARD29"] = "STENT XIENCE",
+                ["CARD30"] = "STENT PROMUS",
+            };
+
+            // Use the AR_Ref codes from SousFamilles to generate realistic references
+            var sfCodes = new Dictionary<string, string[]>
+            {
+                ["CARD01"] = new[] { "39666", "39200", "39201" },
+                ["CARD02"] = new[] { "39202", "39203" },
+                ["CARD03"] = new[] { "39300", "39301" },
+                ["CARD29"] = new[] { "39204", "39222" },
+                ["CARD30"] = new[] { "39205", "39206" },
+            };
+
+            foreach (var (familleCode, designation) in familleDesignations)
+            {
+                var sfNames   = familleSousFamilles[familleCode];
+                var sfCodeArr = sfCodes[familleCode];
+
+                foreach (var longueur in longueurs)
                 {
-                    foreach (var depot in Depots.Take(7))
+                    foreach (var diametre in diametres)
                     {
-                        var sf = sousFamilles[random.Next(sousFamilles.Length)];
-                        var qty = random.Next(0, 10);
-                        
-                        if (qty > 0)
+                        foreach (var depot in Depots.Take(7))
                         {
-                            var monthsToAdd = random.Next(-3, 24);
-                            var expDate = DateTime.Now.AddMonths(monthsToAdd);
-                            var criticalMonths = monthsToAdd < 0 ? -1 : monthsToAdd;
+                            int sfIdx   = random.Next(sfNames.Length);
+                            string sf   = sfNames[sfIdx];
+                            string sfCode = sfCodeArr[sfIdx];
+                            var qty     = random.Next(0, 10);
                             
-                            items.Add(new InventoryItem
+                            if (qty > 0)
                             {
-                                Id = id++,
-                                CodeFamille = "CARD01",
-                                ReferenceArticle = $"39262-{random.Next(1000, 9999)}",
-                                Designation = "STENT SYNERGY",
-                                SousFamille = sf,
-                                Longueur = longueur,
-                                Diametre = diametre,
-                                DepotId = depot.deNo,
-                                DepotName = depot.deIntitule,
-                                Quantite = qty,
-                                DateExpiration = expDate,
-                                Lot = $"LOT{random.Next(10000, 99999)}",
-                                CriticalPeriodMonths = criticalMonths
-                            });
+                                var monthsToAdd    = random.Next(-3, 24);
+                                var expDate        = DateTime.Now.AddMonths(monthsToAdd);
+                                var criticalMonths = monthsToAdd < 0 ? -1 : monthsToAdd;
+                                
+                                items.Add(new InventoryItem
+                                {
+                                    Id               = id++,
+                                    CodeFamille      = familleCode,
+                                    // AR_Ref format: "{sfCode}-{MMYY}" mirrors the DB pattern
+                                    ReferenceArticle = $"{sfCode}-{expDate:MMyy}",
+                                    Designation      = designation,
+                                    SousFamille      = sf,
+                                    Longueur         = longueur,
+                                    Diametre         = diametre,
+                                    DepotId          = depot.deNo,
+                                    DepotName        = depot.deIntitule,
+                                    Quantite         = qty,
+                                    DateExpiration   = expDate,
+                                    Lot              = $"LOT{random.Next(10000, 99999)}",
+                                    CriticalPeriodMonths = criticalMonths
+                                });
+                            }
                         }
                     }
                 }
@@ -223,7 +266,7 @@ namespace KTBioAPI.Data
 ║                                                                  ║
 ║ Total Seed Data:                                                 ║
 ║   - Depots: 11                                                   ║
-║   - Familles: 10                                                 ║
+║   - Familles: 5                                                  ║
 ║   - SousFamilles: 11                                             ║
 ║   - Utilisateurs: 9                                              ║
 ║   - Etats: 5                                                     ║
