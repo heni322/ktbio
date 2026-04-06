@@ -52,13 +52,20 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
   const [sousFamilleFilter, setSousFamilleFilter] = useState<string>('tout');
   const [viewMode, setViewMode]                   = useState<ViewMode>('Date');
 
-  // Sync when parent re-fetches (e.g. etat filter changes)
+  // Sync inventory data when parent re-fetches (sous-famille or etat filter change)
+  // Do NOT reset sousFamilleFilter here - the refetch is often caused by that filter itself
   useEffect(() => {
     setInventory(initialInventory);
-    // Reset sous-famille filter when inventory source changes
+  }, [initialInventory]);
+
+  // Reset UI filters ONLY when the active etat source changes (navigation to different etat)
+  const filterEtatId = filterEtat?.id ?? null;
+  useEffect(() => {
     setSousFamilleFilter('tout');
     setAnneeFilter('tout');
-  }, [initialInventory]);
+    onSousFamilleChange?.(''); // also clear the parent's SQL filter
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterEtatId]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
 

@@ -166,7 +166,7 @@ namespace KTBioAPI.Data
             catch (Exception ex)
             {
                 Console.WriteLine($"\n⚠ Impossible de lire les tables Sage (F_DEPOT / F_FAMILLE) : {ex.Message}");
-                Console.WriteLine("  → Vérifiez la connexion à MEGATRON\\SQLEXPRESS");
+                Console.WriteLine("  → Vérifiez la connexion à DESKTOP-TK6HO92\\SQLEXPRESS");
             }
 
             Console.WriteLine("\n" + new string('=', 70));

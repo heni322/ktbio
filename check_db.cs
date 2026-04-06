@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
 using System;
 
-string connectionString = "Server=MEGATRON\\SQLEXPRESS;Database=KTBIO2014;User Id=sa;Password=Sql@2025++;TrustServerCertificate=True;Encrypt=False;";
+string connectionString = "Server=DESKTOP-TK6HO92\\SQLEXPRESS;Database=KTBIO2014;User Id=sa;Password=SQL2025;TrustServerCertificate=True;Encrypt=False;";
 
 try {
     using (SqlConnection connection = new SqlConnection(connectionString)) {

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KTBioAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6e5f66b30f4dbeeafeb165e265ba3ea0c8306950")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c2b7dacf5d691405beb6983b591b507b8ff71e0")]
 [assembly: System.Reflection.AssemblyProductAttribute("KTBioAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KTBioAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
