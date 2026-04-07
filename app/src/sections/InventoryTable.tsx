@@ -418,22 +418,16 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                             {depotData && depotData.items.length > 0 ? (
                               depotData.items.map((detail, dIdx) => (
                                 <div key={dIdx}>
-                                  {viewMode === 'Lot' ? (
-                                    <div className="text-center">
-                                      <span className="text-gray-900 font-medium text-sm">
-                                        {detail.lot || '-'}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <div className={`px-2 py-1 rounded text-center text-[11px] font-bold ${getCriticalClass(detail.criticalPeriodMonths)}`}>
-                                      {detail.sousFamille}:{' '}
-                                      {detail.dateExpiration
-                                        ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' })
-                                        : '-'}
-                                      ({detail.quantite})
-                                    </div>
-                                  )}
-
+                                  <div className={`px-2 py-1 rounded text-center text-[11px] font-bold ${getCriticalClass(detail.criticalPeriodMonths)}`}>
+                                    {detail.sousFamille}:{' '}
+                                    {viewMode === 'Lot'
+                                      ? (detail.lot || '-')
+                                      : detail.dateExpiration
+                                          ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' })
+                                          : '-'
+                                    }
+                                    {'('}{detail.quantite}{')'}
+                                  </div>
                                   {viewMode === 'Date' && (
                                     <div className="flex items-center justify-center gap-2 mt-1 py-1 px-2 bg-white rounded border border-gray-200 shadow-sm h-7">
                                       <button className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-all active:scale-90"
