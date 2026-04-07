@@ -466,6 +466,7 @@ function InventoryPage() {
         inventory={inventory}
         depots={depots}
         allSousFamilles={sousFamilles}
+        activeSousFamilleCode={sousFamilleCode}
         onSousFamilleChange={(code) => setSousFamilleCode(code)}
       />
     </Layout>

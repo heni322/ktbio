@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from 'react';
+﻿import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { ArrowLeft, FileSpreadsheet, Minus, Plus } from 'lucide-react';
@@ -18,6 +18,7 @@ interface InventoryTableProps {
   inventory: InventoryGroupView[];
   depots: Depot[];
   allSousFamilles: SousFamille[];
+  activeSousFamilleCode?: string; // controlled value from parent
   onSousFamilleChange?: (code: string) => void; // FIX: lifts filter to InventoryPage for SQL-level filtering
 }
 
@@ -39,7 +40,7 @@ function WarningIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-export function InventoryTable({ inventory: initialInventory, depots, allSousFamilles, onSousFamilleChange }: InventoryTableProps) {
+export function InventoryTable({ inventory: initialInventory, depots, allSousFamilles, activeSousFamilleCode = '', onSousFamilleChange }: InventoryTableProps) {
   const navigate    = useNavigate();
   const location    = useLocation();
   const filterEtat  = location.state?.filterEtat as Etat | undefined;
@@ -49,7 +50,13 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
 
   // ── UI filters ───────────────────────────────────────────────────────────
   const [anneeFilter, setAnneeFilter]             = useState<string>('tout');
-  const [sousFamilleFilter, setSousFamilleFilter] = useState<string>('tout');
+  // sousFamilleFilter is derived from the parent's activeSousFamilleCode prop
+  // so the dropdown always reflects the actual active filter (no desync)
+  const sousFamilleFilter = useMemo(() => {
+    if (!activeSousFamilleCode) return 'tout';
+    const sf = allSousFamilles.find(s => s.code === activeSousFamilleCode);
+    return sf?.nom ?? 'tout';
+  }, [activeSousFamilleCode, allSousFamilles]);
   const [viewMode, setViewMode]                   = useState<ViewMode>('Date');
 
   // Sync inventory data when parent re-fetches (sous-famille or etat filter change)
@@ -59,11 +66,20 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
   }, [initialInventory]);
 
   // Reset UI filters ONLY when the active etat source changes (navigation to different etat)
+  // useRef tracks the previous etat id to avoid firing on initial mount
   const filterEtatId = filterEtat?.id ?? null;
+  const prevEtatIdRef = useRef<number | null | undefined>(undefined);
   useEffect(() => {
-    setSousFamilleFilter('tout');
-    setAnneeFilter('tout');
-    onSousFamilleChange?.(''); // also clear the parent's SQL filter
+    if (prevEtatIdRef.current === undefined) {
+      // first render — just record the id, don't reset anything
+      prevEtatIdRef.current = filterEtatId;
+      return;
+    }
+    if (prevEtatIdRef.current !== filterEtatId) {
+      prevEtatIdRef.current = filterEtatId;
+      setAnneeFilter('tout');
+      onSousFamilleChange?.('');
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterEtatId]);
 
@@ -234,8 +250,7 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
               <Select
                 value={sousFamilleFilter}
                 onValueChange={(nom) => {
-                  setSousFamilleFilter(nom);
-                  // FIX: send the AR_Ref prefix CODE to backend SQL filter
+                  // sousFamilleFilter is derived from activeSousFamilleCode — no local state needed
                   if (nom === 'tout') {
                     onSousFamilleChange?.('');
                   } else {
