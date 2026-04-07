@@ -1,4 +1,4 @@
-using KTBioAPI.Data.Entities;
+﻿using KTBioAPI.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace KTBioAPI.Data
@@ -101,6 +101,27 @@ namespace KTBioAPI.Data
                 context.SaveChanges();
                 Console.WriteLine($"✓ Seeded {MockData.SousFamilles.Count} SousFamilles");
                 seededAny = true;
+            }
+            else
+            {
+                // UPDATE existing SousFamilles codes to correct values from Excel
+                context.Database.ExecuteSqlRaw(@"
+                    DELETE FROM [dbo].[App_SousFamilles];
+                    INSERT INTO [dbo].[App_SousFamilles] ([cbMarq],[code],[nom],[fCodeFFamille],[dateCreation]) VALUES
+                    (1,  '39417', 'XD',  'CARD01', '2023-01-15'),
+                    (2,  '39666', 'SH',  'CARD01', '2023-02-20'),
+                    (3,  '39399', 'PPs', 'CARD01', '2023-03-10'),
+                    (4,  '39427', 'SM',  'CARD01', '2023-04-05'),
+                    (5,  '39413', 'PE',  'CARD01', '2023-05-12'),
+                    (6,  '39273', 'R',   'CARD02', '2023-06-08'),
+                    (7,  '39124', 'Q',   'CARD03', '2023-07-15'),
+                    (8,  '39276', 'NCE', 'CARD03', '2023-08-20'),
+                    (9,  '39193', 'E',   'CARD03', '2023-09-10'),
+                    (10, '39195', 'OTW', 'CARD03', '2023-10-05'),
+                    (11, '39222', 'DCB', 'CARD29', '2023-11-12'),
+                    (12, '39403', 'CB',  'CARD30', '2023-12-01');
+                ");
+                Console.WriteLine("✓ SousFamilles updated with correct codes from Excel");
             }
 
             // ── 3. Seed Utilisateurs ─────────────────────────────────────────

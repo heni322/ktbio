@@ -86,24 +86,10 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
     );
   }, [allSousFamilles, filterEtat]);
 
-  /**
-   * FIX: Also derive sous-familles that actually appear in the current
-   * inventory data, so the dropdown never shows options that would produce
-   * empty results. We intersect relevantSousFamilles with whatever names
-   * actually exist in the loaded inventory rows.
-   */
-  const sousFamillesInInventory = useMemo(() => {
-    const namesInData = new Set<string>();
-    inventory.forEach(item => {
-      item.depots.forEach(depot => {
-        depot.items.forEach(detail => {
-          if (detail.sousFamille) namesInData.add(detail.sousFamille);
-        });
-      });
-    });
-    // Keep only sous-familles that are both relevant AND present in the data
-    return relevantSousFamilles.filter(sf => namesInData.has(sf.nom));
-  }, [relevantSousFamilles, inventory]);
+  // Use relevantSousFamilles directly for the dropdown — do NOT intersect with
+  // the current inventory, because when a sous-famille filter is active the inventory
+  // only contains that one sous-famille, which empties the dropdown and resets the filter.
+  const sousFamillesInInventory = relevantSousFamilles;
 
   const sousFamillesNames = useMemo(
     () => sousFamillesInInventory.map(sf => sf.nom),

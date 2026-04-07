@@ -1,4 +1,4 @@
-using KTBioAPI.Models;
+﻿using KTBioAPI.Models;
 using KTBioAPI.Helpers;
 
 namespace KTBioAPI.Data
@@ -40,17 +40,18 @@ namespace KTBioAPI.Data
         // invisible when filtering by any real Etat.
         public static List<SousFamille> SousFamilles { get; set; } = new()
         {
-            new SousFamille { cbMarq = 1,  code = "39666", nom = "SH",     fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 1, 15) },
-            new SousFamille { cbMarq = 2,  code = "39200", nom = "PP",     fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 2, 20) },
-            new SousFamille { cbMarq = 3,  code = "39201", nom = "PE",     fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 3, 10) },
-            new SousFamille { cbMarq = 4,  code = "39202", nom = "S",      fCodeFFamille = "CARD02", dateCreation = new DateTime(2023, 4, 5) },
-            new SousFamille { cbMarq = 5,  code = "39203", nom = "SM",     fCodeFFamille = "CARD02", dateCreation = new DateTime(2023, 5, 12) },
-            new SousFamille { cbMarq = 6,  code = "39204", nom = "XD",     fCodeFFamille = "CARD29", dateCreation = new DateTime(2023, 6, 8) },
-            new SousFamille { cbMarq = 7,  code = "39222", nom = "Agent",  fCodeFFamille = "CARD29", dateCreation = new DateTime(2023, 7, 15) },
-            new SousFamille { cbMarq = 8,  code = "39205", nom = "PPs",    fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 8, 20) },
-            new SousFamille { cbMarq = 9,  code = "39206", nom = "SH",     fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 9, 10) },
-            new SousFamille { cbMarq = 10, code = "39300", nom = "XSierra",fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 10, 5) },
-            new SousFamille { cbMarq = 11, code = "39301", nom = "Promus", fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 11, 12) },
+            new SousFamille { cbMarq = 1,  code = "39417", nom = "XD",  fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 1, 15) },
+            new SousFamille { cbMarq = 2,  code = "39666", nom = "SH",  fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 2, 20) },
+            new SousFamille { cbMarq = 3,  code = "39399", nom = "PPs", fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 3, 10) },
+            new SousFamille { cbMarq = 4,  code = "39427", nom = "SM",  fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 4, 5) },
+            new SousFamille { cbMarq = 5,  code = "39413", nom = "PE",  fCodeFFamille = "CARD01", dateCreation = new DateTime(2023, 5, 12) },
+            new SousFamille { cbMarq = 6,  code = "39273", nom = "R",   fCodeFFamille = "CARD02", dateCreation = new DateTime(2023, 6, 8) },
+            new SousFamille { cbMarq = 7,  code = "39124", nom = "Q",   fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 7, 15) },
+            new SousFamille { cbMarq = 8,  code = "39276", nom = "NCE", fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 8, 20) },
+            new SousFamille { cbMarq = 9,  code = "39193", nom = "E",   fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 9, 10) },
+            new SousFamille { cbMarq = 10, code = "39195", nom = "OTW", fCodeFFamille = "CARD03", dateCreation = new DateTime(2023, 10, 5) },
+            new SousFamille { cbMarq = 11, code = "39222", nom = "DCB", fCodeFFamille = "CARD29", dateCreation = new DateTime(2023, 11, 12) },
+            new SousFamille { cbMarq = 12, code = "39403", nom = "CB",  fCodeFFamille = "CARD30", dateCreation = new DateTime(2023, 12, 1) },
         };
 
         // Seed users with BCrypt hashed passwords
@@ -162,11 +163,11 @@ namespace KTBioAPI.Data
             // Map famille codes → their sous-famille names for realistic mock data
             var familleSousFamilles = new Dictionary<string, string[]>
             {
-                ["CARD01"] = new[] { "SH", "PP", "PE" },
-                ["CARD02"] = new[] { "S", "SM" },
-                ["CARD03"] = new[] { "XSierra", "Promus" },
-                ["CARD29"] = new[] { "XD", "Agent" },
-                ["CARD30"] = new[] { "PPs", "SH" },
+                ["CARD01"] = new[] { "XD", "SH", "PPs", "SM", "PE" },
+                ["CARD02"] = new[] { "R" },
+                ["CARD03"] = new[] { "Q", "NCE", "E", "OTW" },
+                ["CARD29"] = new[] { "DCB" },
+                ["CARD30"] = new[] { "CB" },
             };
 
             var longueurs = new[] { 12m, 8m, 15m, 18m, 20m, 22m, 25m, 28m, 30m, 38m };
@@ -187,11 +188,11 @@ namespace KTBioAPI.Data
             // Use the AR_Ref codes from SousFamilles to generate realistic references
             var sfCodes = new Dictionary<string, string[]>
             {
-                ["CARD01"] = new[] { "39666", "39200", "39201" },
-                ["CARD02"] = new[] { "39202", "39203" },
-                ["CARD03"] = new[] { "39300", "39301" },
-                ["CARD29"] = new[] { "39204", "39222" },
-                ["CARD30"] = new[] { "39205", "39206" },
+                ["CARD01"] = new[] { "39417", "39666", "39399", "39427", "39413" },
+                ["CARD02"] = new[] { "39273" },
+                ["CARD03"] = new[] { "39124", "39276", "39193", "39195" },
+                ["CARD29"] = new[] { "39222" },
+                ["CARD30"] = new[] { "39403" },
             };
 
             foreach (var (familleCode, designation) in familleDesignations)
