@@ -1,0 +1,180 @@
+2026-04-08 16:41:42.956 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 16:41:42.987 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 16:42:00.827 +01:00 [ERR] An error occurred using the connection to database 'KTBIO2014' on server 'MEGATRON\SQLEXPRESS'.
+2026-04-08 16:42:00.830 +01:00 [ERR] An error occurred while seeding the database
+Microsoft.Data.SqlClient.SqlException (0x80131904): A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: SNI_PN11, error: 26 - Error Locating Server/Instance Specified)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, SqlConnectionString connectionOptions, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, UInt32 waitForMultipleObjectsTimeout, Boolean allowCreate, Boolean onlyOneCheckConnection, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionPool.TryGetConnection(DbConnection owningObject, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.TryGetConnection(DbConnection owningConnection, TaskCompletionSource`1 retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, DbConnectionInternal& connection)
+   at Microsoft.Data.ProviderBase.DbConnectionInternal.TryOpenConnectionInternal(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionClosed.TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource`1 retry, DbConnectionOptions userOptions)
+   at Microsoft.Data.SqlClient.SqlConnection.TryOpen(TaskCompletionSource`1 retry, SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.Open(SqlConnectionOverrides overrides)
+   at Microsoft.Data.SqlClient.SqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, IEnumerable`1 parameters)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, Object[] parameters)
+   at KTBioAPI.Data.DbInitializer.Initialize(KTBioContext context) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Data\DbInitializer.cs:line 21
+   at Program.<Main>$(String[] args) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Program.cs:line 149
+ClientConnectionId:00000000-0000-0000-0000-000000000000
+Error Number:-1,State:0,Class:20
+2026-04-08 16:42:00.968 +01:00 [INF] KTBio API starting...
+2026-04-08 16:55:47.636 +01:00 [INF] KTBio API stopped
+2026-04-08 16:59:01.430 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 16:59:01.460 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 16:59:03.384 +01:00 [ERR] Failed executing DbCommand (21ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                    DELETE FROM [dbo].[App_SousFamilles];
+                    INSERT INTO [dbo].[App_SousFamilles] ([cbMarq],[code],[nom],[fCodeFFamille],[dateCreation]) VALUES
+                    (1,  '39417', 'XD',  'CARD01', '2023-01-15'),
+                    (2,  '39666', 'SH',  'CARD01', '2023-02-20'),
+                    (3,  '39399', 'PPs', 'CARD01', '2023-03-10'),
+                    (4,  '39427', 'SM',  'CARD01', '2023-04-05'),
+                    (5,  '39413', 'PE',  'CARD01', '2023-05-12'),
+                    (6,  '39273', 'R',   'CARD02', '2023-06-08'),
+                    (7,  '39124', 'Q',   'CARD03', '2023-07-15'),
+                    (8,  '39276', 'NCE', 'CARD03', '2023-08-20'),
+                    (9,  '39193', 'E',   'CARD03', '2023-09-10'),
+                    (10, '39195', 'OTW', 'CARD03', '2023-10-05'),
+                    (11, '39222', 'DCB', 'CARD29', '2023-11-12'),
+                    (12, '39403', 'CB',  'CARD30', '2023-12-01');
+2026-04-08 16:59:03.389 +01:00 [ERR] An error occurred while seeding the database
+Microsoft.Data.SqlClient.SqlException (0x80131904): La conversion d'un type de données varchar en type de données datetime a créé une valeur hors limites.
+L'instruction a été arrêtée.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlCommand.RunExecuteNonQueryTds(String methodName, Boolean isAsync, Int32 timeout, Boolean asyncWrite)
+   at Microsoft.Data.SqlClient.SqlCommand.InternalExecuteNonQuery(TaskCompletionSource`1 completion, Boolean sendToPipe, Int32 timeout, Boolean& usedCache, Boolean asyncWrite, Boolean inRetry, String methodName)
+   at Microsoft.Data.SqlClient.SqlCommand.ExecuteNonQuery()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, IEnumerable`1 parameters)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, Object[] parameters)
+   at KTBioAPI.Data.DbInitializer.Initialize(KTBioContext context) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Data\DbInitializer.cs:line 108
+   at Program.<Main>$(String[] args) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Program.cs:line 149
+ClientConnectionId:d608b55c-696b-4cd5-a7de-832c50c1cdee
+Error Number:242,State:3,Class:16
+2026-04-08 16:59:03.491 +01:00 [INF] KTBio API starting...
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 1.8994 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 1.8743 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 1.8273 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 1.8851 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 1.9087 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Depot responded 204 in 1.8853 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 1.8409 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Account/ListeUtilisateurs responded 204 in 1.8428 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 1.8588 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 1.8989 ms
+2026-04-08 16:59:34.233 +01:00 [INF] HTTP OPTIONS /api/Etat responded 204 in 1.9381 ms
+2026-04-08 16:59:34.296 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 39.2876 ms
+2026-04-08 16:59:34.332 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 67.4266 ms
+2026-04-08 16:59:34.339 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 401 in 1.8336 ms
+2026-04-08 16:59:34.339 +01:00 [INF] HTTP OPTIONS /api/Account/Refresh responded 204 in 0.0471 ms
+2026-04-08 16:59:34.345 +01:00 [INF] HTTP OPTIONS /api/Account/Refresh responded 204 in 0.0586 ms
+2026-04-08 16:59:34.391 +01:00 [INF] HTTP POST /api/Account/Refresh responded 200 in 46.4932 ms
+2026-04-08 16:59:34.391 +01:00 [INF] HTTP POST /api/Account/Refresh responded 200 in 42.5837 ms
+2026-04-08 16:59:34.428 +01:00 [INF] HTTP GET /api/Famille responded 200 in 163.2338 ms
+2026-04-08 16:59:34.428 +01:00 [INF] HTTP GET /api/Depot responded 200 in 163.2068 ms
+2026-04-08 16:59:34.430 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 165.4510 ms
+2026-04-08 16:59:34.449 +01:00 [INF] HTTP GET /api/Famille responded 200 in 20.6822 ms
+2026-04-08 16:59:34.449 +01:00 [INF] HTTP GET /api/Depot responded 200 in 20.6842 ms
+2026-04-08 16:59:34.449 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 17.8969 ms
+2026-04-08 16:59:34.458 +01:00 [INF] HTTP GET /api/Etat responded 200 in 193.6998 ms
+2026-04-08 16:59:34.463 +01:00 [INF] HTTP GET /api/Etat responded 200 in 3.0193 ms
+2026-04-08 16:59:34.464 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 67.5063 ms
+2026-04-08 16:59:34.469 +01:00 [INF] HTTP GET /api/Account/ListeUtilisateurs responded 200 in 3.8963 ms
+2026-04-08 16:59:37.366 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.8229 ms
+2026-04-08 16:59:37.366 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 2.8228 ms
+2026-04-08 16:59:37.371 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 3.2073 ms
+2026-04-08 16:59:37.371 +01:00 [INF] HTTP GET /api/Famille responded 200 in 3.2108 ms
+2026-04-08 16:59:41.875 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 7573.9527 ms
+2026-04-08 16:59:41.945 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.1148 ms
+2026-04-08 16:59:41.947 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0402 ms
+2026-04-08 16:59:41.948 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0414 ms
+2026-04-08 16:59:41.948 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0410 ms
+2026-04-08 16:59:41.949 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0303 ms
+2026-04-08 16:59:41.949 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.3729 ms
+2026-04-08 16:59:41.955 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 4.6505 ms
+2026-04-08 16:59:41.962 +01:00 [INF] HTTP GET /api/Famille responded 200 in 6.7379 ms
+2026-04-08 16:59:41.964 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 5.4421 ms
+2026-04-08 16:59:41.968 +01:00 [INF] HTTP GET /api/Famille responded 200 in 4.5941 ms
+2026-04-08 17:00:35.564 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 53602.8399 ms
+2026-04-08 17:00:35.658 +01:00 [INF] HTTP OPTIONS /hubs/chat/negotiate responded 204 in 0.0920 ms
+2026-04-08 17:00:35.660 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0572 ms
+2026-04-08 17:00:35.661 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0340 ms
+2026-04-08 17:00:35.662 +01:00 [INF] HTTP OPTIONS /api/SousFamille responded 204 in 0.0302 ms
+2026-04-08 17:00:35.662 +01:00 [INF] HTTP POST /hubs/chat/negotiate responded 200 in 0.2730 ms
+2026-04-08 17:00:35.662 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0237 ms
+2026-04-08 17:00:35.677 +01:00 [INF] HTTP GET /api/Famille responded 200 in 10.6516 ms
+2026-04-08 17:00:35.684 +01:00 [INF] HTTP GET /api/Famille responded 200 in 4.3056 ms
+2026-04-08 17:00:35.691 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 25.6665 ms
+2026-04-08 17:00:35.696 +01:00 [INF] HTTP GET /api/SousFamille responded 200 in 3.7060 ms
+2026-04-08 17:00:40.873 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0779 ms
+2026-04-08 17:00:40.873 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0527 ms
+2026-04-08 17:00:40.880 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.6896 ms
+2026-04-08 17:00:40.884 +01:00 [INF] HTTP GET /api/Famille responded 200 in 2.8866 ms
+2026-04-08 17:00:45.998 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0502 ms
+2026-04-08 17:00:46.002 +01:00 [INF] HTTP POST /api/Famille responded 405 in 0.3297 ms
+2026-04-08 17:00:57.159 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0742 ms
+2026-04-08 17:00:57.163 +01:00 [INF] HTTP POST /api/Famille responded 405 in 0.6202 ms
+2026-04-08 17:01:09.549 +01:00 [INF] HTTP OPTIONS /api/Famille responded 204 in 0.0366 ms
+2026-04-08 17:01:09.553 +01:00 [INF] HTTP POST /api/Famille responded 405 in 0.2655 ms
+2026-04-08 17:01:50.119 +01:00 [INF] HTTP CONNECT /hubs/chat responded 200 in 74446.3591 ms
+2026-04-08 17:01:50.137 +01:00 [INF] KTBio API stopped
+2026-04-08 17:02:00.920 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 17:02:00.948 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 17:02:02.996 +01:00 [ERR] Failed executing DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                    DELETE FROM [dbo].[App_SousFamilles];
+                    INSERT INTO [dbo].[App_SousFamilles] ([cbMarq],[code],[nom],[fCodeFFamille],[dateCreation]) VALUES
+                    (1,  '39417', 'XD',  'CARD01', '2023-01-15'),
+                    (2,  '39666', 'SH',  'CARD01', '2023-02-20'),
+                    (3,  '39399', 'PPs', 'CARD01', '2023-03-10'),
+                    (4,  '39427', 'SM',  'CARD01', '2023-04-05'),
+                    (5,  '39413', 'PE',  'CARD01', '2023-05-12'),
+                    (6,  '39273', 'R',   'CARD02', '2023-06-08'),
+                    (7,  '39124', 'Q',   'CARD03', '2023-07-15'),
+                    (8,  '39276', 'NCE', 'CARD03', '2023-08-20'),
+                    (9,  '39193', 'E',   'CARD03', '2023-09-10'),
+                    (10, '39195', 'OTW', 'CARD03', '2023-10-05'),
+                    (11, '39222', 'DCB', 'CARD29', '2023-11-12'),
+                    (12, '39403', 'CB',  'CARD30', '2023-12-01');
+2026-04-08 17:02:03.001 +01:00 [ERR] An error occurred while seeding the database
+Microsoft.Data.SqlClient.SqlException (0x80131904): La conversion d'un type de données varchar en type de données datetime a créé une valeur hors limites.
+L'instruction a été arrêtée.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlCommand.RunExecuteNonQueryTds(String methodName, Boolean isAsync, Int32 timeout, Boolean asyncWrite)
+   at Microsoft.Data.SqlClient.SqlCommand.InternalExecuteNonQuery(TaskCompletionSource`1 completion, Boolean sendToPipe, Int32 timeout, Boolean& usedCache, Boolean asyncWrite, Boolean inRetry, String methodName)
+   at Microsoft.Data.SqlClient.SqlCommand.ExecuteNonQuery()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, IEnumerable`1 parameters)
+   at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(DatabaseFacade databaseFacade, String sql, Object[] parameters)
+   at KTBioAPI.Data.DbInitializer.Initialize(KTBioContext context) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Data\DbInitializer.cs:line 108
+   at Program.<Main>$(String[] args) in C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\Program.cs:line 149
+ClientConnectionId:b072ac17-6651-41d6-9da3-22306fca6905
+Error Number:242,State:3,Class:16
+2026-04-08 17:02:03.094 +01:00 [INF] KTBio API starting...
+2026-04-08 17:02:06.361 +01:00 [INF] KTBio API stopped
+2026-04-08 17:02:16.711 +01:00 [WRN] No store type was specified for the decimal property 'Diametre' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 17:02:16.741 +01:00 [WRN] No store type was specified for the decimal property 'Longueur' on entity type 'InventoryItem'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-04-08 17:02:21.326 +01:00 [INF] Database initialized successfully
+2026-04-08 17:02:21.410 +01:00 [INF] KTBio API starting...
+2026-04-08 17:02:28.753 +01:00 [INF] KTBio API stopped
