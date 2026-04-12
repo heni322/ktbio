@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import type {
   Depot, Famille, SousFamille, Utilisateur, Etat,
   InventoryItem, InventoryGroupView, LoginRequest, LoginResponse,
-  RefreshResponse, AddUtilisateurRequest
+  RefreshResponse, AddUtilisateurRequest, PagedResult
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:51430/api';
@@ -103,7 +103,13 @@ export const depotApi = {
 };
 
 export const familleApi = {
-  getAll: () => api.get<Famille[]>('/Famille'),
+  // Paginated — used by the Familles table page
+  getPaged: (page: number, pageSize: number, search?: string) =>
+    api.get<PagedResult<Famille>>('/Famille', { params: { page, pageSize, search: search || undefined } }),
+  // Unpaginated (large pageSize) — used by dropdowns & EtatForm
+  getAll: () =>
+    api.get<PagedResult<Famille>>('/Famille', { params: { page: 1, pageSize: 100 } })
+      .then(r => ({ ...r, data: r.data.items })),
   getByCode: (code: string) => api.get<Famille>(`/Famille/${code}`),
   create: (famille: Omit<Famille, 'cbMarq'>) => api.post<Famille>('/Famille', famille),
   update: (code: string, famille: Famille) => api.put(`/Famille/${code}`, famille),
@@ -111,7 +117,16 @@ export const familleApi = {
 };
 
 export const sousFamilleApi = {
-  getAll: (familleCode?: string) => api.get<SousFamille[]>('/SousFamille', { params: { familleCode } }),
+  // Paginated — used by the SousFamilles table page
+  getPaged: (page: number, pageSize: number, search?: string, familleCode?: string) =>
+    api.get<PagedResult<SousFamille>>('/SousFamille', {
+      params: { page, pageSize, search: search || undefined, familleCode: familleCode || undefined }
+    }),
+  // Unpaginated — used by dropdowns / inventory filter
+  getAll: (familleCode?: string) =>
+    api.get<PagedResult<SousFamille>>('/SousFamille', {
+      params: { page: 1, pageSize: 200, familleCode: familleCode || undefined }
+    }).then(r => ({ ...r, data: r.data.items })),
   getById: (id: number) => api.get<SousFamille>(`/SousFamille/${id}`),
   create: (sf: SousFamille) => api.post<SousFamille>('/SousFamille', sf),
   update: (id: number, sf: SousFamille) => api.put(`/SousFamille/${id}`, sf),
@@ -142,7 +157,7 @@ export const inventoryApi = {
   filter: (filters: {
     annee?: string;
     sousFamille?: string;
-    codeSousFamille?: string; // AR_Ref prefix filter: LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1)
+    codeSousFamille?: string;
     familles?: string[];
     depots?: number[];
     modeAffichage?: string;

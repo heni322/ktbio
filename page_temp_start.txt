@@ -1,0 +1,17 @@
+﻿function UtilisateursPage() {
+  const { user: currentUser } = useAuth();
+  const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formData, setFormData] = useState({ username: '', fullName: '', email: '', password: '', role: 'User' });
+  const [formError, setFormError] = useState('');
+  const [editingUser, setEditingUser] = useState<Utilisateur | null>(null);
+  const [editFormData, setEditFormData] = useState({ fullName: '', email: '', role: 'User' });
+  const [editError, setEditError] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [changePwdUser, setChangePwdUser] = useState<Utilisateur | null>(null);
+  const [pwdData, setPwdData] = useState({ newPassword: '', confirmPassword: '' });
+  const [pwdError, setPwdError] = useState('');
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const isAdmin = currentUser?.role === 'Admin';

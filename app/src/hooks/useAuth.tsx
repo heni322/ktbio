@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+﻿import { useState, useEffect, createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import { accountApi } from '../services/api';
 import type { Utilisateur, LoginRequest, LoginResponse } from '@/types';
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         success: false,
         token: '',
+        refreshToken: '',
         message: 'Erreur de connexion au serveur',
         user: null
       };

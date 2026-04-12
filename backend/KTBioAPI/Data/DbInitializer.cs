@@ -1,4 +1,4 @@
-﻿using KTBioAPI.Data.Entities;
+using KTBioAPI.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace KTBioAPI.Data
@@ -105,21 +105,23 @@ namespace KTBioAPI.Data
             else
             {
                 // UPDATE existing SousFamilles codes to correct values from Excel
+                // FIX: Use YYYYMMDD date format (no dashes) to avoid SQL Server locale
+                //      datetime conversion errors (varchar → datetime out of range).
                 context.Database.ExecuteSqlRaw(@"
                     DELETE FROM [dbo].[App_SousFamilles];
                     INSERT INTO [dbo].[App_SousFamilles] ([cbMarq],[code],[nom],[fCodeFFamille],[dateCreation]) VALUES
-                    (1,  '39417', 'XD',  'CARD01', '2023-01-15'),
-                    (2,  '39666', 'SH',  'CARD01', '2023-02-20'),
-                    (3,  '39399', 'PPs', 'CARD01', '2023-03-10'),
-                    (4,  '39427', 'SM',  'CARD01', '2023-04-05'),
-                    (5,  '39413', 'PE',  'CARD01', '2023-05-12'),
-                    (6,  '39273', 'R',   'CARD02', '2023-06-08'),
-                    (7,  '39124', 'Q',   'CARD03', '2023-07-15'),
-                    (8,  '39276', 'NCE', 'CARD03', '2023-08-20'),
-                    (9,  '39193', 'E',   'CARD03', '2023-09-10'),
-                    (10, '39195', 'OTW', 'CARD03', '2023-10-05'),
-                    (11, '39222', 'DCB', 'CARD29', '2023-11-12'),
-                    (12, '39403', 'CB',  'CARD30', '2023-12-01');
+                    (1,  '39417', 'XD',  'CARD01', '20230115'),
+                    (2,  '39666', 'SH',  'CARD01', '20230220'),
+                    (3,  '39399', 'PPs', 'CARD01', '20230310'),
+                    (4,  '39427', 'SM',  'CARD01', '20230405'),
+                    (5,  '39413', 'PE',  'CARD01', '20230512'),
+                    (6,  '39273', 'R',   'CARD02', '20230608'),
+                    (7,  '39124', 'Q',   'CARD03', '20230715'),
+                    (8,  '39276', 'NCE', 'CARD03', '20230820'),
+                    (9,  '39193', 'E',   'CARD03', '20230910'),
+                    (10, '39195', 'OTW', 'CARD03', '20231005'),
+                    (11, '39222', 'DCB', 'CARD29', '20231112'),
+                    (12, '39403', 'CB',  'CARD30', '20231201');
                 ");
                 Console.WriteLine("✓ SousFamilles updated with correct codes from Excel");
             }
@@ -187,7 +189,7 @@ namespace KTBioAPI.Data
             catch (Exception ex)
             {
                 Console.WriteLine($"\n⚠ Impossible de lire les tables Sage (F_DEPOT / F_FAMILLE) : {ex.Message}");
-                Console.WriteLine("  → Vérifiez la connexion à DESKTOP-TK6HO92\\SQLEXPRESS");
+                Console.WriteLine("  → Vérifiez la connexion à MEGATRON\\SQLEXPRESS");
             }
 
             Console.WriteLine("\n" + new string('=', 70));

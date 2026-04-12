@@ -15,39 +15,65 @@ namespace KTBioAPI.Controllers
         private readonly ILogger<SousFamilleController> _logger;
 
         public SousFamilleController(
-            KTBioAPI.Data.KTBioContext context, 
+            KTBioAPI.Data.KTBioContext context,
             IConfiguration configuration,
             ILogger<SousFamilleController> logger)
         {
-            _context = context;
+            _context     = context;
             _useMockData = configuration.GetValue<bool>("ConnectionStrings:UseMockData");
-            _logger = logger;
+            _logger      = logger;
         }
 
+        // ── GET api/SousFamille?page=1&pageSize=10&search=...&familleCode=... ─
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SousFamille>>> GetAll([FromQuery] string? familleCode = null)
+        public async Task<ActionResult<PagedResult<SousFamille>>> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? familleCode = null)
         {
             try
             {
+                page     = Math.Max(1, page);
+                pageSize = Math.Clamp(pageSize, 1, 100);
+
                 if (_useMockData)
                 {
-                    var mockSf = MockData.SousFamilles;
+                    var source = MockData.SousFamilles.AsEnumerable();
+
                     if (!string.IsNullOrEmpty(familleCode))
-                        mockSf = mockSf.Where(s => s.fCodeFFamille == familleCode).ToList();
-                    return Ok(mockSf);
+                        source = source.Where(s => s.fCodeFFamille == familleCode);
+
+                    if (!string.IsNullOrWhiteSpace(search))
+                        source = source.Where(s =>
+                            s.nom.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                            s.code.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                            s.fCodeFFamille.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+                    var total = source.Count();
+                    var items = source.OrderBy(s => s.nom).Skip((page - 1) * pageSize).Take(pageSize).ToList();
+                    return Ok(new PagedResult<SousFamille> { Items = items, TotalCount = total, Page = page, PageSize = pageSize });
                 }
 
-                // Use App_SousFamilles table instead
                 var query = _context.SousFamilles.AsQueryable();
-                
-                if (!string.IsNullOrEmpty(familleCode))
-                {
-                    query = query.Where(s => s.fCodeFFamille == familleCode);
-                }
 
-                var items = await query.OrderBy(s => s.nom).ToListAsync();
-                
-                return Ok(items);
+                if (!string.IsNullOrEmpty(familleCode))
+                    query = query.Where(s => s.fCodeFFamille == familleCode);
+
+                if (!string.IsNullOrWhiteSpace(search))
+                    query = query.Where(s =>
+                        s.nom.Contains(search) ||
+                        s.code.Contains(search) ||
+                        s.fCodeFFamille.Contains(search));
+
+                var totalCount = await query.CountAsync();
+                var pagedItems = await query
+                    .OrderBy(s => s.nom)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return Ok(new PagedResult<SousFamille> { Items = pagedItems, TotalCount = totalCount, Page = page, PageSize = pageSize });
             }
             catch (Exception ex)
             {
@@ -69,9 +95,7 @@ namespace KTBioAPI.Controllers
                 }
 
                 var sf = await _context.SousFamilles.FirstOrDefaultAsync(s => s.cbMarq == id);
-                if (sf == null)
-                    return NotFound(new { error = "Sous-famille non trouvée" });
-                
+                if (sf == null) return NotFound(new { error = "Sous-famille non trouvée" });
                 return Ok(sf);
             }
             catch (Exception ex)
@@ -87,36 +111,23 @@ namespace KTBioAPI.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                if (!ModelState.IsValid) return BadRequest(ModelState);
 
                 if (_useMockData)
                 {
-                    sousFamille.cbMarq = MockData.SousFamilles.Any() ? MockData.SousFamilles.Max(s => s.cbMarq) + 1 : 1;
-                    sousFamille.dateCreation = DateTime.Now;
+                    sousFamille.cbMarq        = MockData.SousFamilles.Any() ? MockData.SousFamilles.Max(s => s.cbMarq) + 1 : 1;
+                    sousFamille.dateCreation  = DateTime.Now;
                     MockData.SousFamilles.Add(sousFamille);
                     return CreatedAtAction(nameof(GetById), new { id = sousFamille.cbMarq }, sousFamille);
                 }
 
-                // Check if already exists
-                var existing = await _context.SousFamilles
-                    .FirstOrDefaultAsync(s => s.code == sousFamille.code);
+                var existing = await _context.SousFamilles.FirstOrDefaultAsync(s => s.code == sousFamille.code);
+                if (existing != null) return BadRequest(new { error = "Une sous-famille avec ce code existe déjà" });
 
-                if (existing != null)
-                {
-                    return BadRequest(new { error = "Une sous-famille avec ce code existe déjà" });
-                }
-
-                // Generate new ID
-                sousFamille.cbMarq = _context.SousFamilles.Any() ? _context.SousFamilles.Max(s => s.cbMarq) + 1 : 1;
+                sousFamille.cbMarq       = _context.SousFamilles.Any() ? _context.SousFamilles.Max(s => s.cbMarq) + 1 : 1;
                 sousFamille.dateCreation = DateTime.Now;
-
                 _context.SousFamilles.Add(sousFamille);
                 await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Sous-famille {Code} created successfully", sousFamille.code);
 
                 return CreatedAtAction(nameof(GetById), new { id = sousFamille.cbMarq }, sousFamille);
             }
@@ -133,36 +144,27 @@ namespace KTBioAPI.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                if (!ModelState.IsValid) return BadRequest(ModelState);
 
                 if (_useMockData)
                 {
                     var existing = MockData.SousFamilles.FirstOrDefault(s => s.cbMarq == id);
                     if (existing == null) return NotFound(new { error = "Sous-famille non trouvée" });
-                    existing.nom = sousFamille.nom;
-                    existing.code = sousFamille.code;
+                    existing.nom           = sousFamille.nom;
+                    existing.code          = sousFamille.code;
                     existing.fCodeFFamille = sousFamille.fCodeFFamille;
                     return Ok(existing);
                 }
 
-                var existingSousFamille = await _context.SousFamilles.FirstOrDefaultAsync(s => s.cbMarq == id);
-                if (existingSousFamille == null)
-                {
-                    return NotFound(new { error = "Sous-famille non trouvée" });
-                }
+                var existingSf = await _context.SousFamilles.FirstOrDefaultAsync(s => s.cbMarq == id);
+                if (existingSf == null) return NotFound(new { error = "Sous-famille non trouvée" });
 
-                existingSousFamille.nom = sousFamille.nom;
-                existingSousFamille.code = sousFamille.code;
-                existingSousFamille.fCodeFFamille = sousFamille.fCodeFFamille;
-
+                existingSf.nom           = sousFamille.nom;
+                existingSf.code          = sousFamille.code;
+                existingSf.fCodeFFamille = sousFamille.fCodeFFamille;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Sous-famille {Id} updated successfully", id);
-
-                return Ok(existingSousFamille);
+                return Ok(existingSf);
             }
             catch (Exception ex)
             {
@@ -185,16 +187,11 @@ namespace KTBioAPI.Controllers
                     return NoContent();
                 }
 
-                var existingSousFamille = await _context.SousFamilles.FirstOrDefaultAsync(s => s.cbMarq == id);
-                if (existingSousFamille == null)
-                {
-                    return NotFound(new { error = "Sous-famille non trouvée" });
-                }
+                var existingSf = await _context.SousFamilles.FirstOrDefaultAsync(s => s.cbMarq == id);
+                if (existingSf == null) return NotFound(new { error = "Sous-famille non trouvée" });
 
-                _context.SousFamilles.Remove(existingSousFamille);
+                _context.SousFamilles.Remove(existingSf);
                 await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Sous-famille {Id} deleted successfully", id);
 
                 return NoContent();
             }

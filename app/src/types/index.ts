@@ -17,6 +17,14 @@ export interface SousFamille {
   dateCreation?: string;
 }
 
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface Utilisateur {
   id: number;
   username: string;

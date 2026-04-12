@@ -236,29 +236,10 @@ function EtatsPage() {
 }
 
 function FamillesPage() {
-  const [familles, setFamilles] = useState<Famille[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = async () => {
-    try {
-      const res = await familleApi.getAll();
-      setFamilles(res.data);
-    } catch (error) {
-      toast.error('Erreur lors du chargement des familles');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleAdd = async (famille: Omit<Famille, 'cbMarq'>) => {
     try {
       await familleApi.create(famille as Famille);
       toast.success('Famille ajoutée');
-      fetchData();
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -268,7 +249,6 @@ function FamillesPage() {
     try {
       await familleApi.update(famille.faCodeFamille, famille as Famille);
       toast.success('Famille mise à jour');
-      fetchData();
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -278,26 +258,14 @@ function FamillesPage() {
     try {
       await familleApi.delete(code);
       toast.success('Famille supprimée');
-      fetchData();
     } catch {
       // Error already toasted by the global API interceptor
     }
   };
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3CBAAE]"></div>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <FamillesTable
-        familles={familles}
         onAdd={handleAdd}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
@@ -307,34 +275,19 @@ function FamillesPage() {
 }
 
 function SousFamillesPage() {
-  const [sousFamilles, setSousFamilles] = useState<SousFamille[]>([]);
+  // Only familles needed here — for the add/edit dropdown inside the table
   const [familles, setFamilles] = useState<Famille[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchData = async () => {
-    try {
-      const [sfRes, famRes] = await Promise.all([
-        sousFamilleApi.getAll(),
-        familleApi.getAll()
-      ]);
-      setSousFamilles(sfRes.data);
-      setFamilles(famRes.data);
-    } catch (error) {
-      toast.error('Erreur lors du chargement des données');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchData();
+    familleApi.getAll()
+      .then(r => setFamilles(r.data))
+      .catch(() => {});
   }, []);
 
   const handleAdd = async (sf: Omit<SousFamille, 'cbMarq'>) => {
     try {
       await sousFamilleApi.create(sf as SousFamille);
       toast.success('Sous-famille ajoutée');
-      fetchData();
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -344,7 +297,6 @@ function SousFamillesPage() {
     try {
       await sousFamilleApi.update(id, sf as SousFamille);
       toast.success('Sous-famille mise à jour');
-      fetchData();
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -354,26 +306,14 @@ function SousFamillesPage() {
     try {
       await sousFamilleApi.delete(id);
       toast.success('Sous-famille supprimée');
-      fetchData();
     } catch {
       // Error already toasted by the global API interceptor
     }
   };
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3CBAAE]"></div>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <SousFamillesTable
-        sousFamilles={sousFamilles}
         familles={familles}
         onAdd={handleAdd}
         onUpdate={handleUpdate}

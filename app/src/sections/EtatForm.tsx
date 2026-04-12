@@ -50,9 +50,9 @@ export function EtatForm({
     );
   };
 
-  const toggleUtilisateur = (name: string) => {
+  const toggleUtilisateur = (fullName: string) => {
     setSelectedUtilisateurs(prev =>
-      prev.includes(name) ? prev.filter(u => u !== name) : [...prev, name]
+      prev.includes(fullName) ? prev.filter(u => u !== fullName) : [...prev, fullName]
     );
   };
 
@@ -84,6 +84,7 @@ export function EtatForm({
         />
       </div>
 
+      {/* ── Familles ── */}
       <div className="space-y-2">
         <Label className="text-gray-700 font-bold">Code Famille(s) :</Label>
         <div className="relative">
@@ -139,6 +140,7 @@ export function EtatForm({
         </div>
       </div>
 
+      {/* ── Utilisateurs ── */}
       <div className="space-y-2">
         <Label className="text-gray-700 font-bold">Utilisateur(s) :</Label>
         <div className="relative">
@@ -173,20 +175,24 @@ export function EtatForm({
               <div className="fixed inset-0 z-10" onClick={() => setShowUserDropdown(false)} />
               <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-auto animate-in slide-in-from-top-2">
                 <div className="p-1">
-                  {utilisateurs.map(u => (
-                    <div
-                      key={u.id}
-                      className={`px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-md flex items-center justify-between transition-colors ${selectedUtilisateurs.includes(u.fullName) ? 'bg-emerald-50 text-[#3CBAAE]' : 'text-gray-700'}`}
-                      onClick={() => toggleUtilisateur(u.fullName)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedUtilisateurs.includes(u.fullName) ? 'bg-[#3CBAAE] border-[#3CBAAE]' : 'border-gray-300 bg-white'}`}>
-                          {selectedUtilisateurs.includes(u.fullName) && <Check className="h-3 w-3 text-white" />}
+                  {utilisateurs.map(u => {
+                    const isSelected = selectedUtilisateurs.includes(u.fullName);
+                    return (
+                      <div
+                        key={u.id}
+                        className={`px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-md flex items-center gap-3 transition-colors ${isSelected ? 'bg-emerald-50 text-[#3CBAAE]' : 'text-gray-700'}`}
+                        onClick={() => toggleUtilisateur(u.fullName)}
+                      >
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0 ${isSelected ? 'bg-[#3CBAAE] border-[#3CBAAE]' : 'border-gray-300 bg-white'}`}>
+                          {isSelected && <Check className="h-3 w-3 text-white" />}
                         </div>
                         <span className="text-sm font-medium">{u.fullName}</span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                  {utilisateurs.length === 0 && (
+                    <p className="px-3 py-4 text-sm text-gray-400 text-center">Aucun utilisateur disponible</p>
+                  )}
                 </div>
               </div>
             </>
@@ -194,6 +200,7 @@ export function EtatForm({
         </div>
       </div>
 
+      {/* ── Dépôts ── */}
       <div className="space-y-4">
         <Label className="text-gray-700 font-bold">Choisir liste de(s) Dépôt(s) :</Label>
         <div className="relative">
@@ -235,7 +242,7 @@ export function EtatForm({
                 ))}
               </tbody>
             </table>
-            {(filteredDepots || []).length === 0 && (
+            {filteredDepots.length === 0 && (
               <div className="p-8 text-center text-gray-500 italic">
                 Aucun dépôt trouvé
               </div>
@@ -244,12 +251,12 @@ export function EtatForm({
         </div>
         <div className="flex justify-between items-center px-1">
           <p className="text-xs text-gray-500 font-medium">
-            Affichage de {(filteredDepots || []).length} dépôts
-            {(selectedDepots || []).length > 0 && (
+            Affichage de {filteredDepots.length} dépôts
+            {selectedDepots.length > 0 && (
               <span className="text-[#3CBAAE] ml-1">({selectedDepots.length} sélectionnés)</span>
             )}
           </p>
-          {(selectedDepots || []).length > 0 && (
+          {selectedDepots.length > 0 && (
             <button
               type="button"
               onClick={() => setSelectedDepots([])}
