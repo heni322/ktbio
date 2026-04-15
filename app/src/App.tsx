@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from './sections/Header';
 import { Sidebar } from './sections/Sidebar';
@@ -275,7 +275,6 @@ function FamillesPage() {
 }
 
 function SousFamillesPage() {
-  // Only familles needed here — for the add/edit dropdown inside the table
   const [familles, setFamilles] = useState<Famille[]>([]);
 
   useEffect(() => {
@@ -323,7 +322,6 @@ function SousFamillesPage() {
   );
 }
 
-// ── FIX: sous-famille filter lifted to page level → server-side SQL ──────────
 function InventoryPage() {
   const location = useLocation();
   const [inventory, setInventory] = useState<InventoryGroupView[]>([]);
@@ -331,13 +329,10 @@ function InventoryPage() {
   const [sousFamilles, setSousFamilles] = useState<SousFamille[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // FIX: AR_Ref prefix code (e.g. '38940') sent to backend SQL
-  // SQL: LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1) = @codeSousFamille
   const [sousFamilleCode, setSousFamilleCode] = useState('');
 
   const filterEtat = (location.state as any)?.filterEtat as Etat | undefined;
 
-  // FIX: include sousFamilleCode so re-fetch fires when user picks a sous-famille
   const filterKey = JSON.stringify({
     etat: filterEtat
       ? { id: filterEtat.id, familles: filterEtat.familles, depots: filterEtat.depots }
@@ -351,7 +346,6 @@ function InventoryPage() {
     async function fetchData() {
       setLoading(true);
       try {
-        // FIX: build filter including codeSousFamille for SQL-level filtering
         const filter: {
           familles?: string[];
           depots?: number[];
@@ -362,7 +356,6 @@ function InventoryPage() {
           filter.familles = filterEtat.familles;
           filter.depots   = filterEtat.depots;
         }
-        // SQL: LEFT(AR_Ref, CHARINDEX('-', AR_Ref) - 1) = @codeSousFamille
         if (sousFamilleCode) {
           filter.codeSousFamille = sousFamilleCode;
         }
@@ -388,7 +381,7 @@ function InventoryPage() {
     fetchData();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey]); // stable string — only re-fetches when filter actually changes
+  }, [filterKey]);
 
   if (loading) {
     return (
@@ -466,6 +459,7 @@ function DepotsPage() {
   );
 }
 
+// ── Utilisateurs Page ─────────────────────────────────────────────────────────
 function UtilisateursPage() {
   const { user: currentUser } = useAuth();
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
@@ -475,7 +469,19 @@ function UtilisateursPage() {
   const [formData, setFormData]         = useState({
     username: '', fullName: '', email: '', password: '', role: 'User'
   });
-  const [formError, setFormError]       = useState('');
+  const [formError, setFormError] = useState('');
+
+  // ── Edit state ────────────────────────────────────────────────────────────
+  const [editingUser, setEditingUser]   = useState<Utilisateur | null>(null);
+  const [editFormData, setEditFormData] = useState({ fullName: '', email: '', role: 'User' });
+  const [editError, setEditError]       = useState('');
+  const [editLoading, setEditLoading]   = useState(false);
+
+  // ── Change-password state ─────────────────────────────────────────────────
+  const [changePwdUser, setChangePwdUser] = useState<Utilisateur | null>(null);
+  const [pwdData, setPwdData]             = useState({ newPassword: '', confirmPassword: '' });
+  const [pwdError, setPwdError]           = useState('');
+  const [pwdLoading, setPwdLoading]       = useState(false);
 
   const isAdmin = currentUser?.role === 'Admin';
 
@@ -525,6 +531,61 @@ function UtilisateursPage() {
     }
   };
 
+  const openEdit = (u: Utilisateur) => {
+    setEditingUser(u);
+    setEditFormData({ fullName: u.fullName, email: u.email, role: u.role });
+    setEditError('');
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditError('');
+    setEditLoading(true);
+    try {
+      await accountApi.updateUtilisateur(editingUser.id, editFormData);
+      toast.success('Utilisateur modifié avec succès');
+      setEditingUser(null);
+      fetchData();
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Erreur lors de la modification';
+      setEditError(msg);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const openChangePwd = (u: Utilisateur) => {
+    setChangePwdUser(u);
+    setPwdData({ newPassword: '', confirmPassword: '' });
+    setPwdError('');
+  };
+
+  const handleChangePwd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!changePwdUser) return;
+    setPwdError('');
+    if (pwdData.newPassword.length < 6) {
+      setPwdError('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    if (pwdData.newPassword !== pwdData.confirmPassword) {
+      setPwdError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    setPwdLoading(true);
+    try {
+      await accountApi.resetPasswordAdmin(changePwdUser.id, pwdData.newPassword);
+      toast.success('Mot de passe modifié avec succès');
+      setChangePwdUser(null);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Erreur lors du changement de mot de passe';
+      setPwdError(msg);
+    } finally {
+      setPwdLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -538,24 +599,22 @@ function UtilisateursPage() {
   return (
     <Layout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-800">Gestion des Utilisateurs</h2>
           {isAdmin && (
-            <Button
-              className="bg-[#3CBAAE] hover:bg-[#35a89d] text-white"
-              onClick={() => { setShowForm(!showForm); setFormError(''); }}
-            >
+            <Button className="bg-[#3CBAAE] hover:bg-[#35a89d] text-white"
+              onClick={() => { setShowForm(!showForm); setFormError(''); }}>
               {showForm ? 'Annuler' : '+ Ajouter un utilisateur'}
             </Button>
           )}
         </div>
 
+        {/* Add form */}
         {showForm && isAdmin && (
           <div className="bg-white rounded-xl shadow border border-gray-100 p-6">
             <h3 className="text-lg font-semibold mb-4 text-gray-700">Nouvel utilisateur</h3>
-            {formError && (
-              <div className="mb-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm">{formError}</div>
-            )}
+            {formError && <div className="mb-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm">{formError}</div>}
             <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom d'utilisateur *</label>
@@ -583,8 +642,7 @@ function UtilisateursPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
-                <select value={formData.role}
-                  onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}
+                <select value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]">
                   <option value="User">Utilisateur</option>
                   <option value="Admin">Administrateur</option>
@@ -600,6 +658,80 @@ function UtilisateursPage() {
           </div>
         )}
 
+        {/* Edit modal */}
+        {editingUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                Modifier — <span className="text-[#3CBAAE]">{editingUser.username}</span>
+              </h3>
+              {editError && <div className="mb-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm">{editError}</div>}
+              <form onSubmit={handleEdit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
+                  <input type="text" required value={editFormData.fullName}
+                    onChange={e => setEditFormData(p => ({ ...p, fullName: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                  <input type="email" required value={editFormData.email}
+                    onChange={e => setEditFormData(p => ({ ...p, email: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                  <select value={editFormData.role}
+                    onChange={e => setEditFormData(p => ({ ...p, role: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]">
+                    <option value="User">Utilisateur</option>
+                    <option value="Admin">Administrateur</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>Annuler</Button>
+                  <Button type="submit" className="bg-[#3CBAAE] hover:bg-[#35a89d] text-white" disabled={editLoading}>
+                    {editLoading ? 'Enregistrement...' : 'Enregistrer'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Change password modal */}
+        {changePwdUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                Mot de passe — <span className="text-[#3CBAAE]">{changePwdUser.username}</span>
+              </h3>
+              {pwdError && <div className="mb-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm">{pwdError}</div>}
+              <form onSubmit={handleChangePwd} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe *</label>
+                  <input type="password" required minLength={6} value={pwdData.newPassword}
+                    onChange={e => setPwdData(p => ({ ...p, newPassword: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer *</label>
+                  <input type="password" required value={pwdData.confirmPassword}
+                    onChange={e => setPwdData(p => ({ ...p, confirmPassword: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
+                </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setChangePwdUser(null)}>Annuler</Button>
+                  <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={pwdLoading}>
+                    {pwdLoading ? 'Modification...' : 'Changer'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Table */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -627,12 +759,22 @@ function UtilisateursPage() {
                     </td>
                     {isAdmin && (
                       <td className="px-4 py-3">
-                        {u.id !== currentUser?.id && (
-                          <button onClick={() => handleDelete(u.id)}
-                            className="text-red-500 hover:text-red-700 text-xs font-medium border border-red-200 px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                            Supprimer
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button onClick={() => openEdit(u)}
+                            className="text-[#3CBAAE] hover:text-[#35a89d] text-xs font-medium border border-[#3CBAAE]/30 px-2 py-1 rounded hover:bg-[#3CBAAE]/5 transition-colors">
+                            Modifier
                           </button>
-                        )}
+                          <button onClick={() => openChangePwd(u)}
+                            className="text-orange-500 hover:text-orange-700 text-xs font-medium border border-orange-200 px-2 py-1 rounded hover:bg-orange-50 transition-colors">
+                            Mot de passe
+                          </button>
+                          {u.id !== currentUser?.id && (
+                            <button onClick={() => handleDelete(u.id)}
+                              className="text-red-500 hover:text-red-700 text-xs font-medium border border-red-200 px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                              Supprimer
+                            </button>
+                          )}
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -768,7 +910,7 @@ function ParametresPage() {
                 </div>
               </div>
               <div className="pt-4">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 text-red-600">Sécurité</h3>
+                <h3 className="text-lg font-bold mb-4 text-red-600">Sécurité</h3>
                 <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700" onClick={handleResetPassword}>
                   Réinitialiser le mot de passe
                 </Button>

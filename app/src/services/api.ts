@@ -103,10 +103,8 @@ export const depotApi = {
 };
 
 export const familleApi = {
-  // Paginated — used by the Familles table page
   getPaged: (page: number, pageSize: number, search?: string) =>
     api.get<PagedResult<Famille>>('/Famille', { params: { page, pageSize, search: search || undefined } }),
-  // Unpaginated (large pageSize) — used by dropdowns & EtatForm
   getAll: () =>
     api.get<PagedResult<Famille>>('/Famille', { params: { page: 1, pageSize: 100 } })
       .then(r => ({ ...r, data: r.data.items })),
@@ -117,12 +115,10 @@ export const familleApi = {
 };
 
 export const sousFamilleApi = {
-  // Paginated — used by the SousFamilles table page
   getPaged: (page: number, pageSize: number, search?: string, familleCode?: string) =>
     api.get<PagedResult<SousFamille>>('/SousFamille', {
       params: { page, pageSize, search: search || undefined, familleCode: familleCode || undefined }
     }),
-  // Unpaginated — used by dropdowns / inventory filter
   getAll: (familleCode?: string) =>
     api.get<PagedResult<SousFamille>>('/SousFamille', {
       params: { page: 1, pageSize: 200, familleCode: familleCode || undefined }
@@ -134,13 +130,18 @@ export const sousFamilleApi = {
 };
 
 export const accountApi = {
-  login:             (credentials: LoginRequest)        => api.post<LoginResponse>('/Account/Login', credentials),
-  refresh:           (refreshToken: string)             => api.post<RefreshResponse>('/Account/Refresh', { refreshToken }),
-  getUsers:          ()                                 => api.get<Utilisateur[]>('/Account/ListeUtilisateurs'),
-  getUser:           (id: number)                       => api.get<Utilisateur>(`/Account/user/${id}`),
-  register:          (req: AddUtilisateurRequest)        => api.post('/Account/Register', req),
-  addUtilisateur:    (req: AddUtilisateurRequest)        => api.post('/Account/AddUtilisateur', req),
-  deleteUtilisateur: (id: number)                       => api.delete(`/Account/DeleteUtilisateur/${id}`),
+  login:               (credentials: LoginRequest)          => api.post<LoginResponse>('/Account/Login', credentials),
+  refresh:             (refreshToken: string)               => api.post<RefreshResponse>('/Account/Refresh', { refreshToken }),
+  getUsers:            ()                                   => api.get<Utilisateur[]>('/Account/ListeUtilisateurs'),
+  getUser:             (id: number)                         => api.get<Utilisateur>(`/Account/user/${id}`),
+  register:            (req: AddUtilisateurRequest)          => api.post('/Account/Register', req),
+  addUtilisateur:      (req: AddUtilisateurRequest)          => api.post('/Account/AddUtilisateur', req),
+  deleteUtilisateur:   (id: number)                         => api.delete(`/Account/DeleteUtilisateur/${id}`),
+  // ── New endpoints ──────────────────────────────────────────────────────────
+  updateUtilisateur:   (id: number, data: { fullName: string; email: string; role: string }) =>
+    api.put(`/Account/UpdateUtilisateur/${id}`, data),
+  resetPasswordAdmin:  (id: number, newPassword: string)    =>
+    api.post(`/Account/ResetPasswordAdmin/${id}`, { newPassword }),
 };
 
 export const etatApi = {

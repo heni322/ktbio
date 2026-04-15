@@ -150,23 +150,22 @@ namespace KTBioAPI.Controllers
                 if (principal == null)
                     return Unauthorized(new { error = "Refresh token invalide ou expiré" });
 
-                // Rebuild a minimal Utilisateur from claims to re-issue access token
-                var idClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var idClaim       = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 var usernameClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
-                var roleClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-                var emailClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-                var nameClaim = principal.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+                var roleClaim     = principal.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                var emailClaim    = principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                var nameClaim     = principal.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
 
                 if (idClaim == null || usernameClaim == null)
                     return Unauthorized(new { error = "Claims invalides dans le refresh token" });
 
                 var user = new Utilisateur
                 {
-                    Id = int.Parse(idClaim),
-                    Username = usernameClaim,
-                    Role = roleClaim ?? "User",
-                    Email = emailClaim ?? "",
-                    FullName = nameClaim ?? usernameClaim,
+                    Id           = int.Parse(idClaim),
+                    Username     = usernameClaim,
+                    Role         = roleClaim ?? "User",
+                    Email        = emailClaim ?? "",
+                    FullName     = nameClaim ?? usernameClaim,
                     PasswordHash = ""
                 };
 
@@ -174,7 +173,7 @@ namespace KTBioAPI.Controllers
 
                 return Ok(new RefreshResponse
                 {
-                    Token = newAccessToken,
+                    Token        = newAccessToken,
                     RefreshToken = newRefreshToken
                 });
             }
@@ -208,11 +207,11 @@ namespace KTBioAPI.Controllers
 
                     var newMock = new Utilisateur
                     {
-                        Id = MockData.Utilisateurs.Any() ? MockData.Utilisateurs.Max(u => u.Id) + 1 : 1,
-                        Username = request.Username,
-                        FullName = request.FullName,
-                        Email = request.Email,
-                        Role = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                        Id           = MockData.Utilisateurs.Any() ? MockData.Utilisateurs.Max(u => u.Id) + 1 : 1,
+                        Username     = request.Username,
+                        FullName     = request.FullName,
+                        Email        = request.Email,
+                        Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
                         PasswordHash = PasswordHelper.HashPassword(request.Password)
                     };
                     MockData.Utilisateurs.Add(newMock);
@@ -224,13 +223,12 @@ namespace KTBioAPI.Controllers
                 if (existing != null)
                     return BadRequest(new { error = "Un utilisateur avec ce nom ou cet email existe déjà" });
 
-                // Use DB-generated Id to avoid race conditions
                 var newUser = new Utilisateur
                 {
-                    Username = request.Username,
-                    FullName = request.FullName,
-                    Email = request.Email,
-                    Role = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                    Username     = request.Username,
+                    FullName     = request.FullName,
+                    Email        = request.Email,
+                    Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
                     PasswordHash = PasswordHelper.HashPassword(request.Password)
                 };
 
@@ -270,11 +268,11 @@ namespace KTBioAPI.Controllers
 
                     var newMock = new Utilisateur
                     {
-                        Id = MockData.Utilisateurs.Any() ? MockData.Utilisateurs.Max(u => u.Id) + 1 : 1,
-                        Username = request.Username,
-                        FullName = request.FullName,
-                        Email = request.Email,
-                        Role = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                        Id           = MockData.Utilisateurs.Any() ? MockData.Utilisateurs.Max(u => u.Id) + 1 : 1,
+                        Username     = request.Username,
+                        FullName     = request.FullName,
+                        Email        = request.Email,
+                        Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
                         PasswordHash = PasswordHelper.HashPassword(request.Password)
                     };
                     MockData.Utilisateurs.Add(newMock);
@@ -288,10 +286,10 @@ namespace KTBioAPI.Controllers
 
                 var newUser = new Utilisateur
                 {
-                    Username = request.Username,
-                    FullName = request.FullName,
-                    Email = request.Email,
-                    Role = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                    Username     = request.Username,
+                    FullName     = request.FullName,
+                    Email        = request.Email,
+                    Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
                     PasswordHash = PasswordHelper.HashPassword(request.Password)
                 };
 
@@ -315,7 +313,6 @@ namespace KTBioAPI.Controllers
         {
             try
             {
-                // Prevent deleting yourself
                 var currentUserId = int.Parse(
                     User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
                 if (currentUserId == id)
@@ -342,6 +339,96 @@ namespace KTBioAPI.Controllers
             {
                 _logger.LogError(ex, "Error deleting user {UserId}", id);
                 return StatusCode(500, new { error = "Erreur lors de la suppression" });
+            }
+        }
+
+        // ─── PUT /api/Account/UpdateUtilisateur/{id} (Admin only) ────────────
+        [HttpPut("UpdateUtilisateur/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateUtilisateur(int id, [FromBody] UpdateUtilisateurRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage);
+                    return BadRequest(new { error = "Données invalides", details = errors });
+                }
+
+                if (_useMockData)
+                {
+                    var mock = MockData.Utilisateurs.FirstOrDefault(u => u.Id == id);
+                    if (mock == null) return NotFound(new { error = "Utilisateur non trouvé" });
+                    mock.FullName = request.FullName;
+                    mock.Email    = request.Email;
+                    mock.Role     = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role;
+                    return Ok(new { message = "Utilisateur mis à jour" });
+                }
+
+                var user = await _context.Utilisateurs.FindAsync(id);
+                if (user == null)
+                    return NotFound(new { error = "Utilisateur non trouvé" });
+
+                // Check email not taken by another user
+                var emailTaken = await _context.Utilisateurs
+                    .AnyAsync(u => u.Email == request.Email && u.Id != id);
+                if (emailTaken)
+                    return BadRequest(new { error = "Cet email est déjà utilisé par un autre compte" });
+
+                user.FullName = request.FullName;
+                user.Email    = request.Email;
+                user.Role     = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role;
+
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Admin updated user {UserId}", id);
+                return Ok(new { message = "Utilisateur mis à jour" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user {UserId}", id);
+                return StatusCode(500, new { error = "Erreur lors de la modification de l'utilisateur", details = ex.Message });
+            }
+        }
+
+        // ─── POST /api/Account/ResetPasswordAdmin/{id} (Admin only) ──────────
+        [HttpPost("ResetPasswordAdmin/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetPasswordAdmin(int id, [FromBody] ResetPasswordAdminRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage);
+                    return BadRequest(new { error = "Données invalides", details = errors });
+                }
+
+                if (_useMockData)
+                {
+                    var mock = MockData.Utilisateurs.FirstOrDefault(u => u.Id == id);
+                    if (mock == null) return NotFound(new { error = "Utilisateur non trouvé" });
+                    mock.PasswordHash = PasswordHelper.HashPassword(request.NewPassword);
+                    return Ok(new { message = "Mot de passe réinitialisé avec succès" });
+                }
+
+                var user = await _context.Utilisateurs.FindAsync(id);
+                if (user == null)
+                    return NotFound(new { error = "Utilisateur non trouvé" });
+
+                user.PasswordHash = PasswordHelper.HashPassword(request.NewPassword);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Admin reset password for user {UserId}", id);
+                return Ok(new { message = "Mot de passe réinitialisé avec succès" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for user {UserId}", id);
+                return StatusCode(500, new { error = "Erreur lors de la réinitialisation du mot de passe", details = ex.Message });
             }
         }
 
@@ -388,11 +475,11 @@ namespace KTBioAPI.Controllers
         // ─── Private helpers ─────────────────────────────────────────────────
         private static Utilisateur SafeUser(Utilisateur u) => new()
         {
-            Id = u.Id,
-            Username = u.Username,
-            FullName = u.FullName,
-            Email = u.Email,
-            Role = u.Role,
+            Id           = u.Id,
+            Username     = u.Username,
+            FullName     = u.FullName,
+            Email        = u.Email,
+            Role         = u.Role,
             PasswordHash = ""
         };
     }
@@ -438,6 +525,27 @@ namespace KTBioAPI.Controllers
         public string Role { get; set; } = "User";
     }
 
+    public class UpdateUtilisateurRequest
+    {
+        [Required(ErrorMessage = "Le nom complet est requis")]
+        [StringLength(100)]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "L'email est requis")]
+        [EmailAddress]
+        [StringLength(100)]
+        public string Email { get; set; } = string.Empty;
+
+        public string Role { get; set; } = "User";
+    }
+
+    public class ResetPasswordAdminRequest
+    {
+        [Required(ErrorMessage = "Le nouveau mot de passe est requis")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Le mot de passe doit contenir au moins 6 caractères")]
+        public string NewPassword { get; set; } = string.Empty;
+    }
+
     public class RefreshRequest
     {
         [Required]
@@ -446,7 +554,7 @@ namespace KTBioAPI.Controllers
 
     public class RefreshResponse
     {
-        public string Token { get; set; } = string.Empty;
+        public string Token        { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
     }
 }
