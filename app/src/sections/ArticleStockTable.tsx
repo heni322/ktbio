@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+﻿import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import {
@@ -303,18 +303,6 @@ export function ArticleStockTable() {
     try {
       const data = await fetchPage(buildRequest(p, ps, s, fam));
       setResp(data);
-
-      // Fallback : enrichir la liste avec les codes vus dans les articles
-      // (au cas où familleApi échoue ou retourne moins que la DB stock)
-      if (data.articles.length > 0) {
-        setFamilleCodes(prev => {
-          const merged = new Set([
-            ...prev,
-            ...data.articles.map(a => a.faCodeFamille?.trim()).filter(Boolean) as string[],
-          ]);
-          return Array.from(merged).sort();
-        });
-      }
     } catch {
       toast.error('Erreur lors du chargement du stock articles');
     } finally {
@@ -397,19 +385,33 @@ export function ArticleStockTable() {
 
     const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
 
-    // Fusion cellules Longueur (colonne A = index 0)
+    // Fusion Longueur (col A) + Diametre (col B)
     const merges: XLSX.Range[] = [];
-    let groupStart = 1;
+
+    // Longueur
+    let lonStart = 1;
     for (let i = 1; i <= articles.length; i++) {
-      const currLon = articles[i]?.longueur;
-      const prevLon = articles[i - 1]?.longueur;
-      if (currLon !== prevLon || i === articles.length) {
-        if (i - groupStart > 0) {
-          merges.push({ s: { r: groupStart, c: 0 }, e: { r: i, c: 0 } });
-        }
-        groupStart = i + 1;
+      const curr = articles[i]?.longueur;
+      const prev = articles[i - 1]?.longueur;
+      if (curr !== prev || i === articles.length) {
+        if (i - lonStart > 0)
+          merges.push({ s: { r: lonStart, c: 0 }, e: { r: i, c: 0 } });
+        lonStart = i + 1;
       }
     }
+
+    // Diametre — group consecutive rows with same (longueur, diametre) pair
+    let diaStart = 1;
+    for (let i = 1; i <= articles.length; i++) {
+      const curr2 = `${articles[i]?.longueur}_${articles[i]?.diametre}`;
+      const prev2 = `${articles[i - 1]?.longueur}_${articles[i - 1]?.diametre}`;
+      if (curr2 !== prev2 || i === articles.length) {
+        if (i - diaStart > 0)
+          merges.push({ s: { r: diaStart, c: 1 }, e: { r: i, c: 1 } });
+        diaStart = i + 1;
+      }
+    }
+
     if (merges.length) ws['!merges'] = merges;
 
     ws['!cols'] = [
@@ -660,13 +662,25 @@ export function ArticleStockTable() {
                     );
                   })() : null}
 
-                  {/* Diamètre */}
-                  <td className={`px-3 py-2.5 text-center font-semibold sticky left-[80px] z-20 border-r border-gray-100 min-w-[80px] ${base} group-hover:bg-teal-50/30`}>
-                    {art.diametre != null
-                      ? <span className="text-teal-600 text-sm">{art.diametre.toFixed(1)}</span>
-                      : <span className="text-gray-200">—</span>}
-                  </td>
-
+                  {/* Diametre - rowspan pour le groupe (longueur, diametre) */}
+                  {(() => {
+                    const isDiaStart = !prevArt
+                      || prevArt.longueur !== art.longueur
+                      || prevArt.diametre !== art.diametre;
+                    if (!isDiaStart) return null;
+                    const gc = articles.slice(idx).findIndex(
+                      a => a.longueur !== art.longueur || a.diametre !== art.diametre
+                    );
+                    const span = gc === -1 ? articles.length - idx : gc;
+                    return (
+                      <td rowSpan={span}
+                        className="px-3 py-2.5 text-center font-bold sticky left-[80px] z-20 border-r border-teal-100 min-w-[80px] bg-teal-50/60 align-middle">
+                        {art.diametre != null
+                          ? <span className="text-teal-700 text-sm">{art.diametre.toFixed(1)}</span>
+                          : <span className="text-gray-200">—</span>}
+                      </td>
+                    );
+                  })()}
                   {/* Référence */}
                   <td className={`px-3 py-2.5 sticky left-[160px] z-20 border-r border-gray-100 min-w-[130px] ${base} group-hover:bg-teal-50/30`}>
                     <span className="font-mono text-[11px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">

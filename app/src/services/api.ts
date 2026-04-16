@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import { toast } from 'sonner';
 import type {
   Depot, Famille, SousFamille, Utilisateur, Etat,
@@ -118,7 +118,7 @@ export const familleApi = {
   getPaged: (page: number, pageSize: number, search?: string) =>
     api.get<PagedResult<Famille>>('/Famille', { params: { page, pageSize, search: search || undefined } }),
   getAll: () =>
-    api.get<PagedResult<Famille>>('/Famille', { params: { page: 1, pageSize: 100 } })
+    api.get<PagedResult<Famille>>('/Famille', { params: { page: 1, pageSize: 200 } })
       .then(r => ({ ...r, data: r.data.items })),
   getByCode: (code: string) => api.get<Famille>(`/Famille/${code}`),
   create: (famille: Omit<Famille, 'cbMarq'>) => api.post<Famille>('/Famille', famille),
