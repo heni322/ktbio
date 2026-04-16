@@ -48,6 +48,33 @@ namespace KTBioAPI.Data
                     ALTER TABLE [dbo].[App_Utilisateurs] ALTER COLUMN [PasswordHash] NVARCHAR(400) NOT NULL;
                 END
 
+                -- FIX CRITIQUE : rendre Id IDENTITY si la table a été créée sans
+                -- (cas seed_users_manual.sql qui crée Id INT PRIMARY KEY sans IDENTITY)
+                IF EXISTS (
+                    SELECT 1 FROM sys.columns c
+                    JOIN sys.objects o ON c.object_id = o.object_id
+                    WHERE o.name = 'App_Utilisateurs' AND c.name = 'Id' AND c.is_identity = 0
+                )
+                BEGIN
+                    SELECT * INTO [dbo].[App_Utilisateurs_Backup] FROM [dbo].[App_Utilisateurs];
+                    DROP TABLE [dbo].[App_Utilisateurs];
+                    CREATE TABLE [dbo].[App_Utilisateurs] (
+                        [Id]           INT IDENTITY(1,1) PRIMARY KEY,
+                        [Username]     NVARCHAR(100) NOT NULL,
+                        [PasswordHash] NVARCHAR(400) NOT NULL,
+                        [Role]         NVARCHAR(50)  NOT NULL,
+                        [FullName]     NVARCHAR(200) NOT NULL,
+                        [Email]        NVARCHAR(200) NOT NULL
+                    );
+                    SET IDENTITY_INSERT [dbo].[App_Utilisateurs] ON;
+                    INSERT INTO [dbo].[App_Utilisateurs] (Id, Username, PasswordHash, Role, FullName, Email)
+                    SELECT Id, Username, PasswordHash, Role, FullName, Email
+                    FROM [dbo].[App_Utilisateurs_Backup];
+                    SET IDENTITY_INSERT [dbo].[App_Utilisateurs] OFF;
+                    DROP TABLE [dbo].[App_Utilisateurs_Backup];
+                    PRINT 'App_Utilisateurs.Id migré vers IDENTITY(1,1) avec succès.';
+                END
+
                 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[App_InventoryItems]') AND type = 'U')
                 CREATE TABLE [dbo].[App_InventoryItems] (
                     [Id]                  INT            PRIMARY KEY,
@@ -90,6 +117,7 @@ namespace KTBioAPI.Data
             ");
 
             Console.WriteLine("✓ Tables App_ vérifiées / créées");
+            Console.WriteLine("✓ Migration IDENTITY vérifiée sur App_Utilisateurs");
             Console.WriteLine("✓ App_Familles et App_Depots supprimées (lecture directe Sage)");
 
             bool seededAny = false;

@@ -155,3 +155,4 @@ C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Release\net8.0\Serilog.Sinks.Con
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Release\net8.0\Serilog.Sinks.Debug.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Release\net8.0\Serilog.Sinks.File.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Release\net8.0\KTBioAPI.sourcelink.json
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Release\net8.0\web.config

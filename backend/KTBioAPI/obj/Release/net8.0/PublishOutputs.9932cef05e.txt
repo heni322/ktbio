@@ -1,4 +1,5 @@
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Release\net8.0\PubTmp\Out\KTBioAPI.exe
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Release\net8.0\PubTmp\Out\web.config
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Release\net8.0\PubTmp\Out\appsettings.Development.json
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Release\net8.0\PubTmp\Out\appsettings.json
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Release\net8.0\PubTmp\Out\appsettings.Production.json

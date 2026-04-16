@@ -24,19 +24,31 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// ─── Bug Fix 1: parseApiError gère correctement tous les formats backend ────
 export function parseApiError(error: unknown): string {
   if (!axios.isAxiosError(error)) return 'Une erreur inattendue est survenue';
 
   const data = error.response?.data;
   if (!data) return error.message || 'Erreur réseau';
 
+  // ASP.NET Core ValidationProblemDetails: { title, status, errors: { field: string[] } }
   if (data.errors && typeof data.errors === 'object') {
-    const messages = Object.values(data.errors as Record<string, string[]>)
-      .flat()
-      .filter(Boolean);
+    const messages = Object.values(data.errors as Record<string, string | string[]>)
+      .reduce<string[]>((acc, val) => {
+        if (Array.isArray(val)) return [...acc, ...val.filter(Boolean)];
+        if (typeof val === 'string' && val) return [...acc, val];
+        return acc;
+      }, []);
     if (messages.length) return messages.join('\n');
   }
 
+  // Backend custom: { error, details: string[] }
+  if (data.details && Array.isArray(data.details)) {
+    const details = (data.details as string[]).filter(Boolean);
+    if (details.length) return details.join('\n');
+  }
+
+  if (typeof data.error === 'string' && data.error) return data.error;
   if (typeof data.message === 'string' && data.message) return data.message;
   if (typeof data.title === 'string' && data.title) return data.title;
 
@@ -130,26 +142,25 @@ export const sousFamilleApi = {
 };
 
 export const accountApi = {
-  login:               (credentials: LoginRequest)          => api.post<LoginResponse>('/Account/Login', credentials),
-  refresh:             (refreshToken: string)               => api.post<RefreshResponse>('/Account/Refresh', { refreshToken }),
-  getUsers:            ()                                   => api.get<Utilisateur[]>('/Account/ListeUtilisateurs'),
-  getUser:             (id: number)                         => api.get<Utilisateur>(`/Account/user/${id}`),
-  register:            (req: AddUtilisateurRequest)          => api.post('/Account/Register', req),
-  addUtilisateur:      (req: AddUtilisateurRequest)          => api.post('/Account/AddUtilisateur', req),
-  deleteUtilisateur:   (id: number)                         => api.delete(`/Account/DeleteUtilisateur/${id}`),
-  // ── New endpoints ──────────────────────────────────────────────────────────
-  updateUtilisateur:   (id: number, data: { fullName: string; email: string; role: string }) =>
+  login:              (credentials: LoginRequest)         => api.post<LoginResponse>('/Account/Login', credentials),
+  refresh:            (refreshToken: string)              => api.post<RefreshResponse>('/Account/Refresh', { refreshToken }),
+  getUsers:           ()                                  => api.get<Utilisateur[]>('/Account/ListeUtilisateurs'),
+  getUser:            (id: number)                        => api.get<Utilisateur>(`/Account/user/${id}`),
+  register:           (req: AddUtilisateurRequest)        => api.post('/Account/Register', req),
+  addUtilisateur:     (req: AddUtilisateurRequest)        => api.post('/Account/AddUtilisateur', req),
+  deleteUtilisateur:  (id: number)                        => api.delete(`/Account/DeleteUtilisateur/${id}`),
+  updateUtilisateur:  (id: number, data: { fullName: string; email: string; role: string }) =>
     api.put(`/Account/UpdateUtilisateur/${id}`, data),
-  resetPasswordAdmin:  (id: number, newPassword: string)    =>
+  resetPasswordAdmin: (id: number, newPassword: string)  =>
     api.post(`/Account/ResetPasswordAdmin/${id}`, { newPassword }),
 };
 
 export const etatApi = {
-  getAll: () => api.get<Etat[]>('/Etat'),
-  getById: (id: number) => api.get<Etat>(`/Etat/${id}`),
-  create: (etat: Omit<Etat, 'id'>) => api.post<Etat>('/Etat', etat),
-  update: (id: number, etat: Omit<Etat, 'id'>) => api.put(`/Etat/${id}`, etat),
-  delete: (id: number) => api.delete(`/Etat/${id}`),
+  getAll:  ()                                    => api.get<Etat[]>('/Etat'),
+  getById: (id: number)                          => api.get<Etat>(`/Etat/${id}`),
+  create:  (etat: Omit<Etat, 'id'>)             => api.post<Etat>('/Etat', etat),
+  update:  (id: number, etat: Omit<Etat, 'id'>) => api.put(`/Etat/${id}`, etat),
+  delete:  (id: number)                          => api.delete(`/Etat/${id}`),
 };
 
 export const inventoryApi = {
@@ -164,11 +175,9 @@ export const inventoryApi = {
     modeAffichage?: string;
   }) => api.post<InventoryGroupView[]>('/Inventory/filter', filters),
   getSousFamilles: () => api.get<string[]>('/Inventory/sousfamilles'),
-  getAnnees: () => api.get<number[]>('/Inventory/annees'),
-  updateQuantity: (id: number, quantity: number) =>
-    api.put(`/Inventory/${id}/quantity/${quantity}`),
-  adjustQuantity: (id: number, delta: number) =>
-    api.put(`/Inventory/${id}/adjust/${delta}`),
+  getAnnees:       () => api.get<number[]>('/Inventory/annees'),
+  updateQuantity:  (id: number, quantity: number) => api.put(`/Inventory/${id}/quantity/${quantity}`),
+  adjustQuantity:  (id: number, delta: number)    => api.put(`/Inventory/${id}/adjust/${delta}`),
 };
 
 export default api;

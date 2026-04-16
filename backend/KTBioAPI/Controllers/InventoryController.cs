@@ -1,6 +1,7 @@
-using KTBioAPI.Data;
+﻿using KTBioAPI.Data;
 using KTBioAPI.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 
@@ -8,6 +9,7 @@ namespace KTBioAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class InventoryController : ControllerBase
     {
         private readonly KTBioContext _context;

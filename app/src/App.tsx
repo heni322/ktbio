@@ -44,6 +44,8 @@ function Layout({ children, fullWidth = false }: LayoutProps) {
 }
 
 function Dashboard() {
+  const { user: currentUser } = useAuth();
+  const isAdmin = currentUser?.role === 'Admin';
   const [stats, setStats] = useState({
     demandeDispatching: 0,
     bonDispatching: 0,
@@ -61,23 +63,27 @@ function Dashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [etatsRes, usersRes, sfRes, famRes, depRes] = await Promise.all([
+        const [etatsRes, sfRes, famRes, depRes] = await Promise.all([
           etatApi.getAll(),
-          accountApi.getUsers(),
           sousFamilleApi.getAll(),
           familleApi.getAll(),
           depotApi.getAll()
         ]);
         setEtats(etatsRes.data);
         setFamilles(famRes.data);
-        setUtilisateurs(usersRes.data);
         setDepots(depRes.data);
+        let usersData: Utilisateur[] = [];
+        if (isAdmin) {
+          const usersRes = await accountApi.getUsers();
+          usersData = usersRes.data;
+          setUtilisateurs(usersData);
+        }
         setStats({
           demandeDispatching: 0,
           bonDispatching: 0,
           demandeRetour: 0,
           bonRetour: 0,
-          utilisateurs: usersRes.data.length,
+          utilisateurs: usersData.length,
           sousFamilles: sfRes.data.length
         });
       } catch (error) {
@@ -92,7 +98,7 @@ function Dashboard() {
   const handleAddEtat = async (etat: Omit<Etat, 'id'>) => {
     try {
       await etatApi.create(etat);
-      toast.success('État ajouté avec succès');
+      toast.success('�tat ajout� avec succ�s');
       const res = await etatApi.getAll();
       setEtats(res.data);
     } catch (error) {
@@ -103,18 +109,18 @@ function Dashboard() {
   const handleUpdateEtat = async (id: number, etat: Omit<Etat, 'id'>) => {
     try {
       await etatApi.update(id, etat);
-      toast.success('État mis à jour');
+      toast.success('�tat mis � jour');
       const res = await etatApi.getAll();
       setEtats(res.data);
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise � jour');
     }
   };
 
   const handleDeleteEtat = async (id: number) => {
     try {
       await etatApi.delete(id);
-      toast.success('État supprimé');
+      toast.success('�tat supprim�');
       const res = await etatApi.getAll();
       setEtats(res.data);
     } catch (error) {
@@ -157,20 +163,25 @@ function EtatsPage() {
   const [depots, setDepots] = useState<Depot[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { user: currentUserEtats } = useAuth();
+  const isAdminEtats = currentUserEtats?.role === 'Admin';
+
   const fetchData = async () => {
     try {
-      const [etatsRes, famRes, usersRes, depRes] = await Promise.all([
+      const [etatsRes, famRes, depRes] = await Promise.all([
         etatApi.getAll(),
         familleApi.getAll(),
-        accountApi.getUsers(),
         depotApi.getAll()
       ]);
       setEtats(etatsRes.data);
       setFamilles(famRes.data);
-      setUtilisateurs(usersRes.data);
       setDepots(depRes.data);
+      if (isAdminEtats) {
+        const usersRes = await accountApi.getUsers();
+        setUtilisateurs(usersRes.data);
+      }
     } catch (error) {
-      toast.error('Erreur lors du chargement des données');
+      toast.error('Erreur lors du chargement des donn�es');
     } finally {
       setLoading(false);
     }
@@ -183,7 +194,7 @@ function EtatsPage() {
   const handleAdd = async (etat: Omit<Etat, 'id'>) => {
     try {
       await etatApi.create(etat);
-      toast.success('État ajouté avec succès');
+      toast.success('�tat ajout� avec succ�s');
       fetchData();
     } catch (error) {
       toast.error("Erreur lors de l'ajout");
@@ -193,17 +204,17 @@ function EtatsPage() {
   const handleUpdate = async (id: number, etat: Omit<Etat, 'id'>) => {
     try {
       await etatApi.update(id, etat);
-      toast.success('État mis à jour');
+      toast.success('�tat mis � jour');
       fetchData();
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise � jour');
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
       await etatApi.delete(id);
-      toast.success('État supprimé');
+      toast.success('�tat supprim�');
       fetchData();
     } catch (error) {
       toast.error('Erreur lors de la suppression');
@@ -239,7 +250,7 @@ function FamillesPage() {
   const handleAdd = async (famille: Omit<Famille, 'cbMarq'>) => {
     try {
       await familleApi.create(famille as Famille);
-      toast.success('Famille ajoutée');
+      toast.success('Famille ajout�e');
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -248,7 +259,7 @@ function FamillesPage() {
   const handleUpdate = async (_id: number, famille: Omit<Famille, 'cbMarq'>) => {
     try {
       await familleApi.update(famille.faCodeFamille, famille as Famille);
-      toast.success('Famille mise à jour');
+      toast.success('Famille mise � jour');
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -257,7 +268,7 @@ function FamillesPage() {
   const handleDelete = async (code: string) => {
     try {
       await familleApi.delete(code);
-      toast.success('Famille supprimée');
+      toast.success('Famille supprim�e');
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -286,7 +297,7 @@ function SousFamillesPage() {
   const handleAdd = async (sf: Omit<SousFamille, 'cbMarq'>) => {
     try {
       await sousFamilleApi.create(sf as SousFamille);
-      toast.success('Sous-famille ajoutée');
+      toast.success('Sous-famille ajout�e');
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -295,7 +306,7 @@ function SousFamillesPage() {
   const handleUpdate = async (id: number, sf: Omit<SousFamille, 'cbMarq'>) => {
     try {
       await sousFamilleApi.update(id, sf as SousFamille);
-      toast.success('Sous-famille mise à jour');
+      toast.success('Sous-famille mise � jour');
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -304,7 +315,7 @@ function SousFamillesPage() {
   const handleDelete = async (id: number) => {
     try {
       await sousFamilleApi.delete(id);
-      toast.success('Sous-famille supprimée');
+      toast.success('Sous-famille supprim�e');
     } catch {
       // Error already toasted by the global API interceptor
     }
@@ -340,6 +351,15 @@ function InventoryPage() {
     sf: sousFamilleCode,
   });
 
+  // FIX 3 : charger les sous-familles UNE SEULE FOIS au montage, independamment
+  // du filterKey. Avant ce fix, chaque changement de filtre SF vidait le dropdown
+  // pendant le re-fetch (flash de liste vide).
+  useEffect(() => {
+    sousFamilleApi.getAll()
+      .then(r => setSousFamilles(r.data))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -360,16 +380,14 @@ function InventoryPage() {
           filter.codeSousFamille = sousFamilleCode;
         }
 
-        const [invRes, depRes, sfRes] = await Promise.all([
+        const [invRes, depRes] = await Promise.all([
           inventoryApi.filter(filter),
           depotApi.getAll(),
-          sousFamilleApi.getAll(),
         ]);
 
         if (!cancelled) {
           setInventory(invRes.data);
           setDepots(depRes.data);
-          setSousFamilles(sfRes.data);
         }
       } catch {
         if (!cancelled) toast.error("Erreur lors du chargement de l'inventaire");
@@ -405,7 +423,6 @@ function InventoryPage() {
     </Layout>
   );
 }
-
 function ArticleStockPage() {
   return (
     <Layout fullWidth>
@@ -424,7 +441,7 @@ function DepotsPage() {
         const res = await depotApi.getAll();
         setDepots(res.data);
       } catch (error) {
-        toast.error('Erreur lors du chargement des dépôts');
+        toast.error('Erreur lors du chargement des d�p�ts');
       } finally {
         setLoading(false);
       }
@@ -445,7 +462,7 @@ function DepotsPage() {
   return (
     <Layout>
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Liste des Dépôts</h2>
+        <h2 className="text-xl font-semibold mb-4">Liste des D�p�ts</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {depots.map(depot => (
             <div key={depot.deNo} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -459,7 +476,7 @@ function DepotsPage() {
   );
 }
 
-// ── Utilisateurs Page ─────────────────────────────────────────────────────────
+// -- Utilisateurs Page ---------------------------------------------------------
 function UtilisateursPage() {
   const { user: currentUser } = useAuth();
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
@@ -471,13 +488,13 @@ function UtilisateursPage() {
   });
   const [formError, setFormError] = useState('');
 
-  // ── Edit state ────────────────────────────────────────────────────────────
+  // -- Edit state ------------------------------------------------------------
   const [editingUser, setEditingUser]   = useState<Utilisateur | null>(null);
   const [editFormData, setEditFormData] = useState({ fullName: '', email: '', role: 'User' });
   const [editError, setEditError]       = useState('');
   const [editLoading, setEditLoading]   = useState(false);
 
-  // ── Change-password state ─────────────────────────────────────────────────
+  // -- Change-password state -------------------------------------------------
   const [changePwdUser, setChangePwdUser] = useState<Utilisateur | null>(null);
   const [pwdData, setPwdData]             = useState({ newPassword: '', confirmPassword: '' });
   const [pwdError, setPwdError]           = useState('');
@@ -508,12 +525,12 @@ function UtilisateursPage() {
     setFormLoading(true);
     try {
       await accountApi.addUtilisateur(formData);
-      toast.success('Utilisateur créé avec succès');
+      toast.success('Utilisateur cr�� avec succ�s');
       setShowForm(false);
       setFormData({ username: '', fullName: '', email: '', password: '', role: 'User' });
       fetchData();
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Erreur lors de la création';
+      const msg = err?.response?.data?.error || 'Erreur lors de la cr�ation';
       setFormError(msg);
     } finally {
       setFormLoading(false);
@@ -524,7 +541,7 @@ function UtilisateursPage() {
     if (!window.confirm('Supprimer cet utilisateur ?')) return;
     try {
       await accountApi.deleteUtilisateur(id);
-      toast.success('Utilisateur supprimé');
+      toast.success('Utilisateur supprim�');
       fetchData();
     } catch {
       toast.error('Erreur lors de la suppression');
@@ -544,7 +561,7 @@ function UtilisateursPage() {
     setEditLoading(true);
     try {
       await accountApi.updateUtilisateur(editingUser.id, editFormData);
-      toast.success('Utilisateur modifié avec succès');
+      toast.success('Utilisateur modifi� avec succ�s');
       setEditingUser(null);
       fetchData();
     } catch (err: any) {
@@ -566,7 +583,7 @@ function UtilisateursPage() {
     if (!changePwdUser) return;
     setPwdError('');
     if (pwdData.newPassword.length < 6) {
-      setPwdError('Le mot de passe doit contenir au moins 6 caractères.');
+      setPwdError('Le mot de passe doit contenir au moins 6 caract�res.');
       return;
     }
     if (pwdData.newPassword !== pwdData.confirmPassword) {
@@ -576,7 +593,7 @@ function UtilisateursPage() {
     setPwdLoading(true);
     try {
       await accountApi.resetPasswordAdmin(changePwdUser.id, pwdData.newPassword);
-      toast.success('Mot de passe modifié avec succès');
+      toast.success('Mot de passe modifi� avec succ�s');
       setChangePwdUser(null);
     } catch (err: any) {
       const msg = err?.response?.data?.error || 'Erreur lors du changement de mot de passe';
@@ -641,7 +658,7 @@ function UtilisateursPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">R�le</label>
                 <select value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]">
                   <option value="User">Utilisateur</option>
@@ -651,7 +668,7 @@ function UtilisateursPage() {
               <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Annuler</Button>
                 <Button type="submit" className="bg-[#3CBAAE] hover:bg-[#35a89d] text-white" disabled={formLoading}>
-                  {formLoading ? 'Création...' : "Créer l'utilisateur"}
+                  {formLoading ? 'Cr�ation...' : "Cr�er l'utilisateur"}
                 </Button>
               </div>
             </form>
@@ -663,7 +680,7 @@ function UtilisateursPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 w-full max-w-md mx-4">
               <h3 className="text-lg font-semibold mb-4 text-gray-700">
-                Modifier — <span className="text-[#3CBAAE]">{editingUser.username}</span>
+                Modifier � <span className="text-[#3CBAAE]">{editingUser.username}</span>
               </h3>
               {editError && <div className="mb-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm">{editError}</div>}
               <form onSubmit={handleEdit} className="space-y-4">
@@ -680,7 +697,7 @@ function UtilisateursPage() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">R�le</label>
                   <select value={editFormData.role}
                     onChange={e => setEditFormData(p => ({ ...p, role: e.target.value }))}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3CBAAE]">
@@ -704,7 +721,7 @@ function UtilisateursPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-6 w-full max-w-md mx-4">
               <h3 className="text-lg font-semibold mb-4 text-gray-700">
-                Mot de passe — <span className="text-[#3CBAAE]">{changePwdUser.username}</span>
+                Mot de passe � <span className="text-[#3CBAAE]">{changePwdUser.username}</span>
               </h3>
               {pwdError && <div className="mb-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm">{pwdError}</div>}
               <form onSubmit={handleChangePwd} className="space-y-4">
@@ -740,7 +757,7 @@ function UtilisateursPage() {
                   <th className="px-4 py-3 text-left text-sm">Nom complet</th>
                   <th className="px-4 py-3 text-left text-sm">Identifiant</th>
                   <th className="px-4 py-3 text-left text-sm">Email</th>
-                  <th className="px-4 py-3 text-left text-sm">Rôle</th>
+                  <th className="px-4 py-3 text-left text-sm">R�le</th>
                   {isAdmin && <th className="px-4 py-3 text-left text-sm">Actions</th>}
                 </tr>
               </thead>
@@ -782,7 +799,7 @@ function UtilisateursPage() {
               </tbody>
             </table>
             {utilisateurs.length === 0 && (
-              <p className="text-center text-gray-400 py-8">Aucun utilisateur trouvé.</p>
+              <p className="text-center text-gray-400 py-8">Aucun utilisateur trouv�.</p>
             )}
           </div>
         </div>
@@ -806,7 +823,7 @@ function ProfilePage() {
           </div>
           <div className="md:w-2/3 p-8">
             <div className="flex justify-between items-start mb-6">
-              <h3 className="text-xl font-bold text-gray-800">Détails du compte</h3>
+              <h3 className="text-xl font-bold text-gray-800">D�tails du compte</h3>
               <Button size="sm" variant="outline" className="border-[#3CBAAE] text-[#3CBAAE] hover:bg-[#3CBAAE]/5">
                 Modifier le profil
               </Button>
@@ -825,12 +842,12 @@ function ProfilePage() {
                 <p className="text-gray-700 font-medium">{user?.email}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Rôle système</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">R�le syst�me</p>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#3CBAAE]/10 text-[#3CBAAE]">{user?.role}</span>
               </div>
             </div>
             <div className="mt-8 pt-8 border-t border-gray-100">
-              <h4 className="text-sm font-bold text-gray-800 mb-4">Statistiques d'activité</h4>
+              <h4 className="text-sm font-bold text-gray-800 mb-4">Statistiques d'activit�</h4>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="p-3 bg-gray-50 rounded-xl">
                   <p className="text-lg font-bold text-[#3CBAAE]">14</p>
@@ -858,67 +875,67 @@ function ParametresPage() {
   const [notifications, setNotifications] = useState(true);
 
   const handleResetPassword = () => {
-    toast.success("Lien de réinitialisation envoyé", {
-      description: "Un email a été envoyé à votre adresse pour changer votre mot de passe."
+    toast.success("Lien de r�initialisation envoy�", {
+      description: "Un email a �t� envoy� � votre adresse pour changer votre mot de passe."
     });
   };
 
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
-        <h2 className="text-2xl font-bold text-gray-800">Paramètres</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Param�tres</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-4">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <button className="w-full px-4 py-3 text-left flex items-center gap-3 bg-[#3CBAAE]/5 text-[#3CBAAE] border-l-4 border-[#3CBAAE]">
-                <User className="h-4 w-4" /><span className="font-medium text-sm">Général</span>
+                <User className="h-4 w-4" /><span className="font-medium text-sm">G�n�ral</span>
               </button>
               <button className="w-full px-4 py-3 text-left flex items-center gap-3 text-gray-600 hover:bg-gray-50 transition-colors">
                 <Bell className="h-4 w-4" /><span className="font-medium text-sm">Notifications</span>
               </button>
               <button className="w-full px-4 py-3 text-left flex items-center gap-3 text-gray-600 hover:bg-gray-50 transition-colors">
-                <Settings className="h-4 w-4" /><span className="font-medium text-sm">Système</span>
+                <Settings className="h-4 w-4" /><span className="font-medium text-sm">Syst�me</span>
               </button>
             </div>
           </div>
           <div className="md:col-span-2 space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
               <div>
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Informations Système</h3>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Informations Syst�me</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between py-3 border-b border-gray-50">
                     <div>
                       <p className="font-medium text-sm text-gray-700">Mode Sombre</p>
-                      <p className="text-xs text-gray-400">Activer l'interface sombre (Bientôt)</p>
+                      <p className="text-xs text-gray-400">Activer l'interface sombre (Bient�t)</p>
                     </div>
                     <Switch checked={darkMode} onCheckedChange={setDarkMode} />
                   </div>
                   <div className="flex items-center justify-between py-3 border-b border-gray-50">
                     <div>
-                      <p className="font-medium text-sm text-gray-700">Langue du système</p>
-                      <p className="text-xs text-gray-400">Français par défaut</p>
+                      <p className="font-medium text-sm text-gray-700">Langue du syst�me</p>
+                      <p className="text-xs text-gray-400">Fran�ais par d�faut</p>
                     </div>
-                    <span className="text-sm font-medium text-[#3CBAAE]">Français</span>
+                    <span className="text-sm font-medium text-[#3CBAAE]">Fran�ais</span>
                   </div>
                   <div className="flex items-center justify-between py-3">
                     <div>
                       <p className="font-medium text-sm text-gray-700">Notifications Push</p>
-                      <p className="text-xs text-gray-400">Alerte de stock en temps réel</p>
+                      <p className="text-xs text-gray-400">Alerte de stock en temps r�el</p>
                     </div>
                     <Switch checked={notifications} onCheckedChange={setNotifications} />
                   </div>
                 </div>
               </div>
               <div className="pt-4">
-                <h3 className="text-lg font-bold mb-4 text-red-600">Sécurité</h3>
+                <h3 className="text-lg font-bold mb-4 text-red-600">S�curit�</h3>
                 <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700" onClick={handleResetPassword}>
-                  Réinitialiser le mot de passe
+                  R�initialiser le mot de passe
                 </Button>
               </div>
             </div>
             <div className="bg-gradient-to-r from-[#3CBAAE] to-[#2d8d84] rounded-xl p-6 text-white shadow-lg">
               <h4 className="font-bold mb-1">Version Pro active</h4>
-              <p className="text-xs opacity-90 mb-4">Votre licence est valide jusqu'au 31 Décembre 2025.</p>
+              <p className="text-xs opacity-90 mb-4">Votre licence est valide jusqu'au 31 D�cembre 2025.</p>
               <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
                 <div className="h-full bg-white w-3/4 rounded-full"></div>
               </div>
@@ -949,8 +966,8 @@ function AppRoutes() {
   useEffect(() => {
     if (isAuthenticated && user) {
       signalRService.connect(user.fullName || 'Anonymous')
-        .then(() => toast.success('Connecté au serveur en temps réel'))
-        .catch(() => toast.error('Impossible de se connecter au serveur en temps réel'));
+        .then(() => toast.success('Connect� au serveur en temps r�el'))
+        .catch(() => toast.error('Impossible de se connecter au serveur en temps r�el'));
 
       signalRService.onNotification((notification) => {
         toast[notification.type as 'success' | 'error' | 'info' | 'warning'](notification.title, {

@@ -35,7 +35,7 @@ namespace KTBioAPI.Controllers
             try
             {
                 page     = Math.Max(1, page);
-                pageSize = Math.Clamp(pageSize, 1, 100);
+                pageSize = Math.Clamp(pageSize, 1, 500);
 
                 if (_useMockData)
                 {

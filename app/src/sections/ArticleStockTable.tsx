@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import api from '@/services/api';
+import { familleApi } from '@/services/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -81,20 +82,24 @@ interface FilterRequest {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Bug Fix 3 : couleurs distinctes pour date dépassée vs critique
 function getCriticalClass(months: number): string {
-  if (months < 0)  return 'bg-red-500    text-white';
-  if (months <= 2) return 'bg-red-500    text-white';
-  if (months <= 5) return 'bg-orange-500 text-white';
-  if (months <= 8) return 'bg-amber-400  text-gray-900';
-  return                  'bg-teal-500   text-white';
+  if (months < 0)   return 'bg-gray-900   text-white';     // Date DÉPASSÉE  → noir
+  if (months === 0) return 'bg-purple-700  text-white';    // Expire ce mois → violet
+  if (months <= 2)  return 'bg-red-500    text-white';     // 1–2 mois       → rouge
+  if (months <= 5)  return 'bg-orange-500 text-white';     // 3–5 mois       → orange
+  if (months <= 8)  return 'bg-amber-400  text-gray-900';  // 6–8 mois       → jaune
+  return                   'bg-teal-500   text-white';      // 9+ mois        → vert
 }
 
+// Bug Fix 3 : bordures distinctes pour date dépassée vs critique
 function getCriticalBorder(months: number): string {
-  if (months < 0)  return 'border-red-200    bg-red-50';
-  if (months <= 2) return 'border-red-200    bg-red-50';
-  if (months <= 5) return 'border-orange-200 bg-orange-50';
-  if (months <= 8) return 'border-amber-200  bg-amber-50';
-  return                  'border-teal-200   bg-teal-50';
+  if (months < 0)   return 'border-gray-400   bg-gray-100';  // Date DÉPASSÉE  → gris foncé
+  if (months === 0) return 'border-purple-300  bg-purple-50'; // Expire ce mois → violet
+  if (months <= 2)  return 'border-red-200    bg-red-50';     // 1–2 mois       → rouge
+  if (months <= 5)  return 'border-orange-200 bg-orange-50';  // 3–5 mois       → orange
+  if (months <= 8)  return 'border-amber-200  bg-amber-50';   // 6–8 mois       → jaune
+  return                   'border-teal-200   bg-teal-50';    // 9+ mois        → vert
 }
 
 function formatDate(d: string | null): string {
@@ -251,13 +256,32 @@ export function ArticleStockTable() {
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const [search,      setSearch]      = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [famille,     setFamille]     = useState('tout');
-  const [viewMode,    setViewMode]    = useState<'Date' | 'Quantité' | 'Lot'>('Date');
-  const [page,        setPage]        = useState(1);
-  const [pageSize,    setPageSize]    = useState(20);
+  const [search,       setSearch]       = useState('');
+  const [searchInput,  setSearchInput]  = useState('');
+  const [famille,      setFamille]      = useState('tout');
+  const [viewMode,     setViewMode]     = useState<'Date' | 'Quantité' | 'Lot'>('Date');
+  const [page,         setPage]         = useState(1);
+  const [pageSize,     setPageSize]     = useState(20);
+
+  // Bug Fix — liste famille : chargée depuis l'API complète, pas depuis les articles de la page
   const [familleCodes, setFamilleCodes] = useState<string[]>([]);
+  const [famillesLoading, setFamillesLoading] = useState(true);
+
+  // Chargement complet des familles au montage (une seule fois)
+  useEffect(() => {
+    familleApi.getAll()
+      .then(r => {
+        const codes = r.data
+          .map(f => f.faCodeFamille?.trim())
+          .filter(Boolean)
+          .sort() as string[];
+        setFamilleCodes(codes);
+      })
+      .catch(() => {
+        // Fallback : on laisse la liste vide, elle se remplira depuis les articles
+      })
+      .finally(() => setFamillesLoading(false));
+  }, []);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleSearchInput = (v: string) => {
@@ -279,6 +303,18 @@ export function ArticleStockTable() {
     try {
       const data = await fetchPage(buildRequest(p, ps, s, fam));
       setResp(data);
+
+      // Fallback : enrichir la liste avec les codes vus dans les articles
+      // (au cas où familleApi échoue ou retourne moins que la DB stock)
+      if (data.articles.length > 0) {
+        setFamilleCodes(prev => {
+          const merged = new Set([
+            ...prev,
+            ...data.articles.map(a => a.faCodeFamille?.trim()).filter(Boolean) as string[],
+          ]);
+          return Array.from(merged).sort();
+        });
+      }
     } catch {
       toast.error('Erreur lors du chargement du stock articles');
     } finally {
@@ -291,15 +327,6 @@ export function ArticleStockTable() {
 
   const handleFamille  = (v: string) => { setFamille(v); setPage(1); };
   const handlePageSize = (s: number) => { setPageSize(s); setPage(1); };
-
-  useEffect(() => {
-    if (resp && famille === 'tout') {
-      setFamilleCodes(prev => {
-        const all = new Set([...prev, ...resp.articles.map(a => a.faCodeFamille).filter(Boolean)]);
-        return Array.from(all).sort();
-      });
-    }
-  }, [resp, famille]);
 
   const updateLocal = (articleRef: string, id: number, delta: number) => {
     setResp(prev => prev ? ({
@@ -327,13 +354,19 @@ export function ArticleStockTable() {
     [articles]
   );
 
+  // ── Bug Fix 2 : Excel avec fusion Longueur + ligne TOTAL + largeurs ──────
   function handleExcelExport() {
     toast.info('Export en cours…');
-    const headers = ['Longueur', 'Diamètre', 'Référence', 'Désignation', 'Famille',
-      ...depots.map(d => d.deIntitule), 'Total'];
-    const rows = articles.map(art => {
+
+    const headers = [
+      'Longueur', 'Diamètre', 'Référence', 'Désignation', 'Famille',
+      ...depots.map(d => d.deIntitule),
+      'Total',
+    ];
+
+    const rows: Record<string, string | number>[] = articles.map(art => {
       const row: Record<string, string | number> = {
-        'Longueur':    art.longueur  ?? '—',
+        'Longueur':    art.longueur  != null ? art.longueur : '—',
         'Diamètre':    art.diametre  != null ? art.diametre.toFixed(1) : '—',
         'Référence':   art.arRef,
         'Désignation': art.arDesign,
@@ -346,7 +379,45 @@ export function ArticleStockTable() {
       row['Total'] = art.total;
       return row;
     });
+
+    // Ligne TOTAL
+    const totalRow: Record<string, string | number> = {
+      'Longueur': 'TOTAL', 'Diamètre': '', 'Référence': '',
+      'Désignation': `${articles.length} articles — page ${page} / ${totalPages}`,
+      'Famille': '',
+    };
+    depots.forEach(dep => {
+      totalRow[dep.deIntitule] = articles.reduce((s, a) => {
+        const d = a.depots.find(x => x.depotId === dep.deNo);
+        return s + (d?.totalQte ?? 0);
+      }, 0);
+    });
+    totalRow['Total'] = pageTotal;
+    rows.push(totalRow);
+
     const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+
+    // Fusion cellules Longueur (colonne A = index 0)
+    const merges: XLSX.Range[] = [];
+    let groupStart = 1;
+    for (let i = 1; i <= articles.length; i++) {
+      const currLon = articles[i]?.longueur;
+      const prevLon = articles[i - 1]?.longueur;
+      if (currLon !== prevLon || i === articles.length) {
+        if (i - groupStart > 0) {
+          merges.push({ s: { r: groupStart, c: 0 }, e: { r: i, c: 0 } });
+        }
+        groupStart = i + 1;
+      }
+    }
+    if (merges.length) ws['!merges'] = merges;
+
+    ws['!cols'] = [
+      { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 32 }, { wch: 12 },
+      ...depots.map(() => ({ wch: 16 })),
+      { wch: 10 },
+    ];
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Stock Articles');
     XLSX.writeFile(wb, `StockArticles_p${page}_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -428,16 +499,26 @@ export function ArticleStockTable() {
             )}
           </div>
           <div className="h-5 w-px bg-gray-200" />
+
+          {/* ── Liste déroulante Famille — chargée depuis familleApi ── */}
           <div className="flex items-center gap-1.5">
             <Filter className="h-3.5 w-3.5 text-gray-400" />
             <Select value={famille} onValueChange={handleFamille}>
-              <SelectTrigger className="h-8 w-40 text-xs border-gray-200 bg-gray-50"><SelectValue placeholder="Toutes familles" /></SelectTrigger>
+              <SelectTrigger className="h-8 w-44 text-xs border-gray-200 bg-gray-50">
+                {famillesLoading
+                  ? <span className="text-gray-400 text-xs">Chargement…</span>
+                  : <SelectValue placeholder="Toutes les familles" />
+                }
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tout" className="text-xs">Toutes les familles</SelectItem>
-                {familleCodes.map(c => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}
+                <SelectItem value="tout" className="text-xs font-medium">Toutes les familles</SelectItem>
+                {familleCodes.map(c => (
+                  <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+
           <div className="flex items-center gap-1.5">
             <LayoutGrid className="h-3.5 w-3.5 text-gray-400" />
             <Select value={viewMode} onValueChange={v => setViewMode(v as typeof viewMode)}>
@@ -449,35 +530,41 @@ export function ArticleStockTable() {
               </SelectContent>
             </Select>
           </div>
+
           {famille !== 'tout' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-[11px] font-medium">
-              {famille}<button onClick={() => handleFamille('tout')}><X className="h-2.5 w-2.5" /></button>
+              {famille}
+              <button onClick={() => handleFamille('tout')}><X className="h-2.5 w-2.5" /></button>
             </span>
           )}
           {search && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[11px] font-medium">
-              "{search}"<button onClick={() => { setSearchInput(''); setSearch(''); setPage(1); }}><X className="h-2.5 w-2.5" /></button>
+              "{search}"
+              <button onClick={() => { setSearchInput(''); setSearch(''); setPage(1); }}><X className="h-2.5 w-2.5" /></button>
             </span>
           )}
         </div>
 
-        {/* Legend */}
+        {/* Légende Date */}
         {viewMode === 'Date' && (
           <div className="px-4 pb-2 flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mr-1">Légende :</span>
             {[
-              { label: 'Dépassée', cls: 'bg-red-500 text-white' },
-              { label: '1–2 mois', cls: 'bg-red-500 text-white' },
-              { label: '3–5 mois', cls: 'bg-orange-500 text-white' },
-              { label: '6–8 mois', cls: 'bg-amber-400 text-gray-900' },
-              { label: '9 m+',    cls: 'bg-teal-500 text-white' },
+              { label: 'Dépassée',  cls: 'bg-gray-900 text-white' },
+              { label: 'Ce mois',   cls: 'bg-purple-700 text-white' },
+              { label: '1–2 mois',  cls: 'bg-red-500 text-white' },
+              { label: '3–5 mois',  cls: 'bg-orange-500 text-white' },
+              { label: '6–8 mois',  cls: 'bg-amber-400 text-gray-900' },
+              { label: '9 m+',      cls: 'bg-teal-500 text-white' },
             ].map(l => (
-              <span key={l.label} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${l.cls}`}>{l.label}</span>
+              <span key={l.label} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${l.cls}`}>
+                {l.label}
+              </span>
             ))}
           </div>
         )}
 
-        {/* Quantité legend */}
+        {/* Légende Quantité */}
         {viewMode === 'Quantité' && (
           <div className="px-4 pb-2 flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mr-1">Légende :</span>
@@ -561,7 +648,7 @@ export function ArticleStockTable() {
                   className={`border-b border-gray-100 transition-colors group ${base} hover:bg-teal-50/30
                     ${isNewLongueur && idx > 0 ? 'border-t-2 border-t-teal-200/60' : ''}`}>
 
-                  {/* Longueur – rowspan group */}
+                  {/* Longueur – rowspan groupe */}
                   {isNewLongueur ? (() => {
                     const groupCount = articles.slice(idx).findIndex(a => a.longueur !== art.longueur);
                     const span = groupCount === -1 ? articles.length - idx : groupCount;
@@ -618,7 +705,7 @@ export function ArticleStockTable() {
                     </button>
                   </td>
 
-                  {/* Per-depot */}
+                  {/* Par dépôt */}
                   {depots.map(dep => {
                     const depData = art.depots.find(d => d.depotId === dep.deNo);
 
@@ -628,18 +715,15 @@ export function ArticleStockTable() {
                         <td key={dep.deNo} className="px-2 py-2 border-r border-gray-100 text-center min-w-[130px]">
                           {qty > 0 ? (
                             <div className="inline-flex flex-col items-center gap-1">
-                              {/* Quantity badge — amber when qty === 1, teal otherwise */}
                               <span className={`inline-flex items-center justify-center h-7 min-w-[2.5rem] px-2 rounded-lg text-sm font-bold shadow-sm transition-colors
                                 ${qty === 1
                                   ? 'bg-amber-400 text-gray-900 shadow-amber-200'
                                   : 'bg-teal-500  text-white      shadow-teal-200'}`}>
                                 {qty}
                               </span>
-                              {/* Warning icon only when qty === 1 */}
                               {qty === 1 && (
                                 <div className="flex items-center gap-0.5" title="Dernière unité en stock — réapprovisionner">
                                   <WarningIcon size={15} />
-                                  {/* <span className="text-[9px] font-bold text-amber-700 leading-none">Critique</span> */}
                                 </div>
                               )}
                             </div>
@@ -700,7 +784,7 @@ export function ArticleStockTable() {
                     );
                   })}
 
-                  {/* Row total */}
+                  {/* Total ligne */}
                   <td className="px-3 py-2.5 text-center min-w-[80px]">
                     <span className="inline-flex items-center justify-center h-7 min-w-[2.5rem] px-2 bg-teal-600 text-white text-sm font-bold rounded-lg shadow-sm shadow-teal-300">
                       {art.total}
@@ -711,7 +795,7 @@ export function ArticleStockTable() {
             })}
           </tbody>
 
-          {/* Footer */}
+          {/* Footer sommes */}
           {articles.length > 0 && (
             <tfoot className="sticky bottom-0 z-20">
               <tr className="bg-gradient-to-r from-teal-50 to-teal-100/50 border-t-2 border-teal-200">

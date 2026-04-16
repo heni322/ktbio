@@ -294,4 +294,4 @@ C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.pdb
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\KTBioAPI.genruntimeconfig.cache
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\ref\KTBioAPI.dll
 C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\appsettings.Production.json
-C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\heniz\Desktop\j\j\backend\KTBioAPI\bin\Debug\net8.0\web.config

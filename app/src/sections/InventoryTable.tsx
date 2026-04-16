@@ -51,9 +51,12 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterEtatId]);
 
+  // FIX 2 : si aucune sous-famille ne correspond aux familles de l'etat,
+  // on retourne TOUTES les sous-familles pour ne pas laisser le dropdown vide.
   const relevantSousFamilles = useMemo(() => {
     if (!filterEtat || filterEtat.familles.length === 0) return allSousFamilles;
-    return allSousFamilles.filter(sf => filterEtat.familles.includes(sf.fCodeFFamille));
+    const filtered = allSousFamilles.filter(sf => filterEtat.familles.includes(sf.fCodeFFamille));
+    return filtered.length > 0 ? filtered : allSousFamilles;
   }, [allSousFamilles, filterEtat]);
 
   const sousFamillesNames = useMemo(() => relevantSousFamilles.map(sf => sf.nom), [relevantSousFamilles]);
@@ -141,29 +144,41 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
     });
   }, [filteredInventory]);
 
+  // ── Bug Fix 3: couleurs distinctes pour date dépassée vs critique ─────────
   const getCriticalClass = (months: number): string => {
-    if (months <= 0)  return 'bg-red-500 text-white';
-    if (months <= 2)  return 'bg-red-500 text-white';
-    if (months <= 5)  return 'bg-orange-500 text-white';
-    if (months <= 8)  return 'bg-yellow-500 text-gray-900';
-    return 'bg-blue-400 text-white';
+    if (months < 0)   return 'bg-gray-900 text-white';        // Date DÉPASSÉE  → noir/gris foncé
+    if (months === 0) return 'bg-purple-700 text-white';      // Expire ce mois → violet foncé
+    if (months <= 2)  return 'bg-red-500 text-white';         // 1-2 mois       → rouge
+    if (months <= 5)  return 'bg-orange-500 text-white';      // 3-5 mois       → orange
+    if (months <= 8)  return 'bg-yellow-500 text-gray-900';   // 6-8 mois       → jaune
+    return 'bg-blue-400 text-white';                           // 9+ mois        → bleu
   };
 
+  // ── Bug Fix 2: Excel avec fusion Longueur + ligne TOTAL ──────────────────
   const handleExportExcel = () => {
     const headers = ['Longueur', 'Diamètre', ...displayedDepots.map(d => d.deIntitule), 'Total'];
+
+    // Données lignes
     const data = filteredInventory.map(item => {
-      const row: Record<string, unknown> = { Longueur: item.longueur, Diamètre: item.diametre };
+      const row: Record<string, unknown> = {
+        'Longueur': item.longueur ?? '—',
+        'Diamètre': item.diametre != null ? item.diametre : '—',
+      };
       displayedDepots.forEach(depot => {
         const depotData = item.depots.find(d => d.depotId === depot.deNo);
         if (depotData && depotData.items.length > 0) {
-          row[depot.deIntitule] = depotData.items.map(detail => {
-            if (viewMode === 'Quantité') return detail.quantite;
-            if (viewMode === 'Lot') return detail.lot || '-';
-            const dateStr = detail.dateExpiration
-              ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' })
-              : '-';
-            return `${detail.sousFamille}: ${dateStr} (${detail.quantite})`;
-          }).join(' | ');
+          if (viewMode === 'Quantité') {
+            row[depot.deIntitule] = depotData.items.reduce((s, i) => s + i.quantite, 0);
+          } else if (viewMode === 'Lot') {
+            row[depot.deIntitule] = depotData.items.map(i => i.lot || '-').join(' | ');
+          } else {
+            row[depot.deIntitule] = depotData.items.map(detail => {
+              const dateStr = detail.dateExpiration
+                ? new Date(detail.dateExpiration).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit' })
+                : '-';
+              return `${detail.sousFamille}: ${dateStr} (${detail.quantite})`;
+            }).join(' | ');
+          }
         } else {
           row[depot.deIntitule] = '-';
         }
@@ -171,8 +186,40 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
       row['Total'] = item.total;
       return row;
     });
+
+    // Ligne TOTAL en bas
+    const totalRow: Record<string, unknown> = { 'Longueur': 'TOTAL', 'Diamètre': '' };
+    displayedDepots.forEach(d => { totalRow[d.deIntitule] = columnSums[d.deNo] ?? 0; });
+    totalRow['Total'] = totalSum;
+    data.push(totalRow);
+
     const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
-    const workbook  = XLSX.utils.book_new();
+
+    // ── Fusion des cellules Longueur (colonne A, index 0) ─────────────────
+    const merges: XLSX.Range[] = [];
+    let groupStart = 1; // ligne 0 = en-tête
+    for (let i = 1; i <= filteredInventory.length; i++) {
+      const currLon = filteredInventory[i]?.longueur;
+      const prevLon = filteredInventory[i - 1]?.longueur;
+      if (currLon !== prevLon || i === filteredInventory.length) {
+        if (i - groupStart > 0) {
+          // fusion de groupStart à i (inclus), colonne 0 = Longueur
+          merges.push({ s: { r: groupStart, c: 0 }, e: { r: i, c: 0 } });
+        }
+        groupStart = i + 1;
+      }
+    }
+    if (merges.length) worksheet['!merges'] = merges;
+
+    // ── Largeurs colonnes ─────────────────────────────────────────────────
+    worksheet['!cols'] = [
+      { wch: 12 },
+      { wch: 10 },
+      ...displayedDepots.map(() => ({ wch: 22 })),
+      { wch: 10 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventaire');
     const date = new Date().toISOString().split('T')[0];
     XLSX.writeFile(workbook, `Inventaire_${filterEtat ? filterEtat.nom + '_' : ''}${date}.xlsx`);
@@ -243,6 +290,12 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Export Excel */}
+            <Button className="bg-[#3CBAAE] hover:bg-[#35a89d]" onClick={handleExportExcel}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Excel
+            </Button>
           </div>
         </div>
       </div>
@@ -250,21 +303,14 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
       {/* ── Legend (Date mode) ── */}
       {viewMode === 'Date' && (
         <div className="flex-shrink-0 px-4 py-2 bg-white border-b flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium px-2 py-1 bg-red-500 text-white rounded">Date échéance atteinte</span>
-          <span className="text-xs font-medium px-2 py-1 bg-red-500 text-white rounded">Période critique entre 1 et 2 mois</span>
-          <span className="text-xs font-medium px-2 py-1 bg-orange-500 text-white rounded">Période critique entre 3 et 5 mois</span>
-          <span className="text-xs font-medium px-2 py-1 bg-yellow-500 text-black rounded">Période critique entre 6 et 8 mois</span>
-          <span className="text-xs font-medium px-2 py-1 bg-blue-400 text-white rounded">Période critique 9 mois plus</span>
+          <span className="text-xs font-medium px-2 py-1 bg-gray-900 text-white rounded">Date dépassée</span>
+          <span className="text-xs font-medium px-2 py-1 bg-purple-700 text-white rounded">Expire ce mois</span>
+          <span className="text-xs font-medium px-2 py-1 bg-red-500 text-white rounded">1-2 mois</span>
+          <span className="text-xs font-medium px-2 py-1 bg-orange-500 text-white rounded">3-5 mois</span>
+          <span className="text-xs font-medium px-2 py-1 bg-yellow-500 text-black rounded">6-8 mois</span>
+          <span className="text-xs font-medium px-2 py-1 bg-blue-400 text-white rounded">9 mois+</span>
         </div>
       )}
-
-      {/* ── Excel button ── */}
-      <div className="flex-shrink-0 px-4 py-2 bg-white border-b border-gray-100">
-        <Button className="bg-[#3CBAAE] hover:bg-[#35a89d]" onClick={handleExportExcel}>
-          <FileSpreadsheet className="h-4 w-4 mr-2" />
-          Excel
-        </Button>
-      </div>
 
       {/* ── Table wrapper — scrollable in BOTH directions ── */}
       <div className="flex-1 overflow-auto relative">
@@ -282,7 +328,6 @@ export function InventoryTable({ inventory: initialInventory, depots, allSousFam
         ) : (
           <table className="border-collapse" style={{ minWidth: '100%' }}>
             <thead>
-              {/* ── Header row — sticky top + left cells sticky ── */}
               <tr className="bg-[#3CBAAE] text-white" style={{ position: 'sticky', top: 0, zIndex: 30 }}>
                 <th className="px-3 py-2 text-left font-semibold text-xs whitespace-nowrap uppercase tracking-tight border-r border-white/30 w-24"
                   style={{ position: 'sticky', left: 0, zIndex: 40, background: '#3CBAAE' }}>

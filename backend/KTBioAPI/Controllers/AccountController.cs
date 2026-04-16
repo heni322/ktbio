@@ -31,7 +31,7 @@ namespace KTBioAPI.Controllers
 
         // ─── GET /api/Account/ListeUtilisateurs ─────────────────────────────
         [HttpGet("ListeUtilisateurs")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Utilisateur>>> GetAllUsers()
         {
             try
@@ -45,7 +45,10 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving users");
-                return StatusCode(500, new { error = "Erreur lors de la récupération des utilisateurs" });
+                return StatusCode(500, new {
+                    error = "Erreur lors de la récupération des utilisateurs",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -56,6 +59,12 @@ namespace KTBioAPI.Controllers
         {
             try
             {
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = User.IsInRole("Admin");
+
+                if (!isAdmin && currentUserId != id)
+                    return Forbid();
+
                 if (_useMockData)
                 {
                     var mock = MockData.Utilisateurs.FirstOrDefault(u => u.Id == id);
@@ -72,7 +81,10 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving user {UserId}", id);
-                return StatusCode(500, new { error = "Erreur lors de la récupération de l'utilisateur" });
+                return StatusCode(500, new {
+                    error = "Erreur lors de la récupération de l'utilisateur",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -116,6 +128,8 @@ namespace KTBioAPI.Controllers
                     return Ok(new LoginResponse { Success = false, Message = "Identifiants incorrects" });
                 }
 
+                user = NormalizeUserRole(user);
+
                 var (accessToken, refreshToken) = _jwtHelper.GenerateTokenPair(user);
 
                 _logger.LogInformation("User {Username} logged in successfully", request.Username);
@@ -132,7 +146,10 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during login for user: {Username}", request.Username);
-                return StatusCode(500, new { error = "Erreur lors de la connexion" });
+                return StatusCode(500, new {
+                    error = "Erreur lors de la connexion",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -159,11 +176,13 @@ namespace KTBioAPI.Controllers
                 if (idClaim == null || usernameClaim == null)
                     return Unauthorized(new { error = "Claims invalides dans le refresh token" });
 
+                var normalizedRole = NormalizeRole(roleClaim ?? "User");
+
                 var user = new Utilisateur
                 {
                     Id           = int.Parse(idClaim),
                     Username     = usernameClaim,
-                    Role         = roleClaim ?? "User",
+                    Role         = normalizedRole,
                     Email        = emailClaim ?? "",
                     FullName     = nameClaim ?? usernameClaim,
                     PasswordHash = ""
@@ -180,7 +199,10 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during token refresh");
-                return StatusCode(500, new { error = "Erreur lors du renouvellement du token" });
+                return StatusCode(500, new {
+                    error = "Erreur lors du renouvellement du token",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -211,7 +233,7 @@ namespace KTBioAPI.Controllers
                         Username     = request.Username,
                         FullName     = request.FullName,
                         Email        = request.Email,
-                        Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                        Role         = NormalizeRole(string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role),
                         PasswordHash = PasswordHelper.HashPassword(request.Password)
                     };
                     MockData.Utilisateurs.Add(newMock);
@@ -228,7 +250,7 @@ namespace KTBioAPI.Controllers
                     Username     = request.Username,
                     FullName     = request.FullName,
                     Email        = request.Email,
-                    Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                    Role         = NormalizeRole(string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role),
                     PasswordHash = PasswordHelper.HashPassword(request.Password)
                 };
 
@@ -241,7 +263,10 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during registration for user: {Username}", request.Username);
-                return StatusCode(500, new { error = "Erreur lors de l'inscription", details = ex.Message });
+                return StatusCode(500, new {
+                    error = "Erreur lors de l'inscription",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -260,6 +285,8 @@ namespace KTBioAPI.Controllers
                     return BadRequest(new { error = "Données invalides", details = errors });
                 }
 
+                var normalizedRole = NormalizeRole(string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role);
+
                 if (_useMockData)
                 {
                     if (MockData.Utilisateurs.Any(u =>
@@ -272,7 +299,7 @@ namespace KTBioAPI.Controllers
                         Username     = request.Username,
                         FullName     = request.FullName,
                         Email        = request.Email,
-                        Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                        Role         = normalizedRole,
                         PasswordHash = PasswordHelper.HashPassword(request.Password)
                     };
                     MockData.Utilisateurs.Add(newMock);
@@ -289,20 +316,25 @@ namespace KTBioAPI.Controllers
                     Username     = request.Username,
                     FullName     = request.FullName,
                     Email        = request.Email,
-                    Role         = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role,
+                    Role         = normalizedRole,
                     PasswordHash = PasswordHelper.HashPassword(request.Password)
                 };
 
                 _context.Utilisateurs.Add(newUser);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Admin created user {Username}", request.Username);
+                _logger.LogInformation("Admin created user {Username} with role {Role}", request.Username, normalizedRole);
                 return Ok(new { message = "Utilisateur créé avec succès", userId = newUser.Id });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating user by admin");
-                return StatusCode(500, new { error = "Erreur lors de la création de l'utilisateur", details = ex.Message });
+                // FIX : on expose l'InnerException pour voir le vrai message SQL Server
+                return StatusCode(500, new {
+                    error = "Erreur lors de la création de l'utilisateur",
+                    details = ex.InnerException?.Message ?? ex.Message,
+                    sqlError = ex.InnerException?.InnerException?.Message
+                });
             }
         }
 
@@ -313,8 +345,7 @@ namespace KTBioAPI.Controllers
         {
             try
             {
-                var currentUserId = int.Parse(
-                    User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var currentUserId = GetCurrentUserId();
                 if (currentUserId == id)
                     return BadRequest(new { error = "Vous ne pouvez pas supprimer votre propre compte" });
 
@@ -338,7 +369,10 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting user {UserId}", id);
-                return StatusCode(500, new { error = "Erreur lors de la suppression" });
+                return StatusCode(500, new {
+                    error = "Erreur lors de la suppression",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -357,13 +391,15 @@ namespace KTBioAPI.Controllers
                     return BadRequest(new { error = "Données invalides", details = errors });
                 }
 
+                var normalizedRole = NormalizeRole(string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role);
+
                 if (_useMockData)
                 {
                     var mock = MockData.Utilisateurs.FirstOrDefault(u => u.Id == id);
                     if (mock == null) return NotFound(new { error = "Utilisateur non trouvé" });
                     mock.FullName = request.FullName;
                     mock.Email    = request.Email;
-                    mock.Role     = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role;
+                    mock.Role     = normalizedRole;
                     return Ok(new { message = "Utilisateur mis à jour" });
                 }
 
@@ -371,7 +407,6 @@ namespace KTBioAPI.Controllers
                 if (user == null)
                     return NotFound(new { error = "Utilisateur non trouvé" });
 
-                // Check email not taken by another user
                 var emailTaken = await _context.Utilisateurs
                     .AnyAsync(u => u.Email == request.Email && u.Id != id);
                 if (emailTaken)
@@ -379,16 +414,19 @@ namespace KTBioAPI.Controllers
 
                 user.FullName = request.FullName;
                 user.Email    = request.Email;
-                user.Role     = string.IsNullOrWhiteSpace(request.Role) ? "User" : request.Role;
+                user.Role     = normalizedRole;
 
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Admin updated user {UserId}", id);
+                _logger.LogInformation("Admin updated user {UserId} role to {Role}", id, normalizedRole);
                 return Ok(new { message = "Utilisateur mis à jour" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user {UserId}", id);
-                return StatusCode(500, new { error = "Erreur lors de la modification de l'utilisateur", details = ex.Message });
+                return StatusCode(500, new {
+                    error = "Erreur lors de la modification de l'utilisateur",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -428,7 +466,10 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error resetting password for user {UserId}", id);
-                return StatusCode(500, new { error = "Erreur lors de la réinitialisation du mot de passe", details = ex.Message });
+                return StatusCode(500, new {
+                    error = "Erreur lors de la réinitialisation du mot de passe",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
@@ -439,8 +480,7 @@ namespace KTBioAPI.Controllers
         {
             try
             {
-                var userId = int.Parse(
-                    User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var userId = GetCurrentUserId();
 
                 if (_useMockData)
                 {
@@ -468,18 +508,45 @@ namespace KTBioAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error changing password");
-                return StatusCode(500, new { error = "Erreur lors du changement de mot de passe" });
+                return StatusCode(500, new {
+                    error = "Erreur lors du changement de mot de passe",
+                    details = ex.InnerException?.Message ?? ex.Message
+                });
             }
         }
 
         // ─── Private helpers ─────────────────────────────────────────────────
+
+        private int GetCurrentUserId()
+        {
+            var value = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0";
+            return int.TryParse(value, out var id) ? id : 0;
+        }
+
+        private static string NormalizeRole(string role) => role.Trim().ToLower() switch
+        {
+            "admin" => "Admin",
+            "user"  => "User",
+            _       => "User"
+        };
+
+        private static Utilisateur NormalizeUserRole(Utilisateur u) => new()
+        {
+            Id           = u.Id,
+            Username     = u.Username,
+            FullName     = u.FullName,
+            Email        = u.Email,
+            Role         = NormalizeRole(u.Role),
+            PasswordHash = u.PasswordHash
+        };
+
         private static Utilisateur SafeUser(Utilisateur u) => new()
         {
             Id           = u.Id,
             Username     = u.Username,
             FullName     = u.FullName,
             Email        = u.Email,
-            Role         = u.Role,
+            Role         = NormalizeRole(u.Role),
             PasswordHash = ""
         };
     }
@@ -499,10 +566,6 @@ namespace KTBioAPI.Controllers
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Used by the Admin "Add User" form — no complex password regex enforced
-    /// so admins can set simple initial passwords and users change later.
-    /// </summary>
     public class AddUtilisateurRequest
     {
         [Required(ErrorMessage = "Le nom d'utilisateur est requis")]

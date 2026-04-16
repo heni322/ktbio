@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Search, Edit, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,10 +15,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { sousFamilleApi } from '@/services/api';
+import { sousFamilleApi, familleApi } from '@/services/api';
 import type { SousFamille, Famille, PagedResult } from '@/types';
 
 interface SousFamillesTableProps {
@@ -28,13 +27,34 @@ interface SousFamillesTableProps {
   onDelete?: (id: number) => Promise<void>;
 }
 
-export function SousFamillesTable({ familles, onAdd, onUpdate, onDelete }: SousFamillesTableProps) {
-  const [result, setResult]             = useState<PagedResult<SousFamille> | null>(null);
-  const [page, setPage]                 = useState(1);
-  const [pageSize, setPageSize]         = useState(10);
-  const [search, setSearch]             = useState('');
-  const [searchInput, setSearchInput]   = useState('');
-  const [loading, setLoading]           = useState(false);
+export function SousFamillesTable({ familles: famillesProp, onAdd, onUpdate, onDelete }: SousFamillesTableProps) {
+  const [result, setResult]           = useState<PagedResult<SousFamille> | null>(null);
+  const [page, setPage]               = useState(1);
+  const [pageSize, setPageSize]       = useState(10);
+  const [search, setSearch]           = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [loading, setLoading]         = useState(false);
+
+  // ── Bug Fix 4: charger les familles localement pour garantir que
+  //   le select soit toujours peuplé, même si la prop arrive tard ──────────
+  const [familles, setFamilles] = useState<Famille[]>(famillesProp);
+
+  useEffect(() => {
+    if (famillesProp.length > 0) {
+      setFamilles(famillesProp);
+    } else {
+      // Charger directement si la prop est vide (race condition ou page rechargée)
+      familleApi.getAll()
+        .then(r => setFamilles(r.data))
+        .catch(() => {});
+    }
+  }, [famillesProp]);
+
+  const reloadFamilles = useCallback(() => {
+    familleApi.getAll()
+      .then(r => setFamilles(r.data))
+      .catch(() => {});
+  }, []);
 
   const [isAddDialogOpen, setIsAddDialogOpen]   = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -70,6 +90,8 @@ export function SousFamillesTable({ familles, onAdd, onUpdate, onDelete }: SousF
       setFormData({ nom: '', code: '', fCodeFFamille: '' });
       setIsAddDialogOpen(false);
       load(page, pageSize, search);
+      // Recharger les familles après ajout au cas où une famille a été créée récemment
+      reloadFamilles();
     }
   };
 
@@ -94,6 +116,13 @@ export function SousFamillesTable({ familles, onAdd, onUpdate, onDelete }: SousF
       if (result && result.items.length === 1 && page > 1) setPage(p => p - 1);
       else load(page, pageSize, search);
     }
+  };
+
+  // Rouvrir le dialog d'ajout avec les familles fraîchement chargées
+  const handleOpenAddDialog = () => {
+    reloadFamilles();
+    setFormData({ nom: '', code: '', fCodeFFamille: '' });
+    setIsAddDialogOpen(true);
   };
 
   const totalPages = result?.totalPages ?? 1;
@@ -135,14 +164,16 @@ export function SousFamillesTable({ familles, onAdd, onUpdate, onDelete }: SousF
               />
             </div>
 
-            {/* Add dialog */}
+            {/* Add dialog — ouvert manuellement pour recharger les familles */}
+            <Button
+              className="bg-[#3CBAAE] hover:bg-[#35a89d]"
+              onClick={handleOpenAddDialog}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle sous Famille
+            </Button>
+
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-[#3CBAAE] hover:bg-[#35a89d]">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle sous Famille
-                </Button>
-              </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>Nouvelle Sous-Famille</DialogTitle></DialogHeader>
                 <div className="space-y-4 py-4">
@@ -156,6 +187,9 @@ export function SousFamillesTable({ familles, onAdd, onUpdate, onDelete }: SousF
                         <option key={f.cbMarq} value={f.faCodeFamille}>{f.faCodeFamille} - {f.faIntitule}</option>
                       ))}
                     </select>
+                    {familles.length === 0 && (
+                      <p className="text-xs text-amber-600">Chargement des familles…</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Nom</Label>
